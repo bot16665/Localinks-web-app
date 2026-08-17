@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@theme {
+  /* Rich Dark Theme Palette */
+  --color-background: #0b1120;
+  --color-on-background: #f8fafc;
+  
+  --color-surface: #0f172a;
+  --color-on-surface: #f8fafc;
+  --color-on-surface-variant: #94a3b8;
+  
+  --color-surface-container-lowest: #070d19;
+  --color-surface-container-low: #0f172a;
+  --color-surface-container: #1e293b;
+  --color-surface-container-high: #293548;
+  --color-surface-container-highest: #334155;
+  --color-surface-variant: #1e293b;
+  --color-surface-bright: #f8fafc;
+  --color-surface-dim: #070d19;
+  --color-surface-tint: #14b8a6;
+
+  --color-primary: #14b8a6;
+  --color-primary-container: #0d9488;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #ccfbf1;
+  --color-on-primary-fixed: #002020;
+  --color-on-primary-fixed-variant: #004f50;
+  --color-primary-fixed: #7df5f5;
+  --color-primary-fixed-dim: #5ed8d8;
+
+  --color-secondary: #94a3b8;
+  --color-secondary-container: #1e293b;
+  --color-on-secondary: #0f172a;
+  --color-on-secondary-container: #e2e8f0;
+  --color-secondary-fixed: #334155;
+  --color-secondary-fixed-dim: #1e293b;
+  --color-on-secondary-fixed: #f8fafc;
+  --color-on-secondary-fixed-variant: #cbd5e1;
+
+  --color-tertiary: #f97316;
+  --color-tertiary-container: #ea580c;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #fff7ed;
+  --color-tertiary-fixed: #ffedd5;
+  --color-tertiary-fixed-dim: #fed7aa;
+  --color-on-tertiary-fixed: #431407;
+  --color-on-tertiary-fixed-variant: #9a3412;
+
+  --color-error: #ef4444;
+  --color-error-container: #7f1d1d;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #fecaca;
+
+  --color-outline: #475569;
+  --color-outline-variant: #334155;
+  
+  --color-inverse-surface: #f8fafc;
+  --color-inverse-on-surface: #0f172a;
+  --color-inverse-primary: #0d9488;
+
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  --font-body-md: var(--font-inter), sans-serif;
+  --font-body-lg: var(--font-inter), sans-serif;
+  --font-headline-md: var(--font-inter), sans-serif;
+  --font-headline-lg: var(--font-inter), sans-serif;
+  --font-label-md: var(--font-inter), sans-serif;
+  --font-label-sm: var(--font-inter), sans-serif;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+}
+
+@layer utilities {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+  }
+  
+  .icon-fill {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  /* Custom Glass & Shadows */
+  .ambient-shadow-sm {
+    box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.4), 0 1px 4px -1px rgba(0, 0, 0, 0.2);
+  }
+  .ambient-shadow-md {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  }
+  .ambient-shadow-lg {
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.6), 0 4px 10px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Scrollbar hiding utilities */
+  .hide-scrollbar,
+  .scrollbar-hide,
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar,
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch-friendly standard min targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Safe area padding for mobile notch devices */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .pb-safe {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
+    }
+    .pt-safe {
+      padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+    }
+  }
+
+  /* Smooth transition helper */
+  .transition-smooth {
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}

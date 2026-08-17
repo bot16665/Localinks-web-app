@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LocalLink - Profile</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface": "#f8f9ff",
+                      "on-surface-variant": "#3d4949",
+                      "tertiary": "#95491d",
+                      "primary-container": "#0ea5a5",
+                      "primary-fixed": "#7df5f5",
+                      "surface-dim": "#cbdbf5",
+                      "secondary-fixed-dim": "#bfc8c8",
+                      "inverse-surface": "#213145",
+                      "on-error-container": "#93000a",
+                      "on-secondary-container": "#5b6465",
+                      "secondary": "#576060",
+                      "on-primary-container": "#003333",
+                      "on-background": "#0b1c30",
+                      "primary": "#006a6a",
+                      "surface-container": "#e5eeff",
+                      "background": "#f8f9ff",
+                      "secondary-fixed": "#dbe4e4",
+                      "outline-variant": "#bcc9c8",
+                      "inverse-primary": "#5ed8d8",
+                      "on-secondary-fixed": "#151d1d",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface": "#0b1c30",
+                      "on-primary-fixed-variant": "#004f50",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-fixed": "#341100",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed-variant": "#404849",
+                      "on-primary-fixed": "#002020",
+                      "on-tertiary-fixed-variant": "#773206",
+                      "surface-bright": "#f8f9ff",
+                      "primary-fixed-dim": "#5ed8d8",
+                      "surface-container-high": "#dce9ff",
+                      "tertiary-fixed": "#ffdbcb",
+                      "tertiary-fixed-dim": "#ffb692",
+                      "surface-container-low": "#eff4ff",
+                      "surface-variant": "#d3e4fe",
+                      "on-primary": "#ffffff",
+                      "outline": "#6d7a79",
+                      "on-tertiary-container": "#511e00",
+                      "on-secondary": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#eaf1ff",
+                      "secondary-container": "#d8e1e1",
+                      "surface-container-highest": "#d3e4fe",
+                      "tertiary-container": "#d87d4d",
+                      "surface-tint": "#006a6a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "40px",
+                      "xs": "4px",
+                      "gutter": "16px",
+                      "sm": "12px",
+                      "xl": "64px",
+                      "base": "8px",
+                      "md": "24px",
+                      "container-margin": "20px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9ff;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface pb-24 md:pb-0 min-h-screen">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-surface-container-highest shadow-sm z-40 hidden md:flex">
+<div class="flex justify-between items-center px-container-margin h-16 w-full max-w-[1200px] mx-auto">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary" data-icon="location_on" data-weight="fill">location_on</span>
+<span class="text-headline-md font-headline-md font-bold text-primary dark:text-inverse-primary">LocalLink</span>
+</div>
+<nav class="hidden md:flex gap-md items-center">
+<a class="text-on-surface-variant dark:text-outline-variant font-label-md text-label-md hover:opacity-80 transition-opacity" href="#">Home</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-label-md text-label-md hover:opacity-80 transition-opacity" href="#">Business</a>
+<a class="text-on-surface-variant dark:text-outline-variant font-label-md text-label-md hover:opacity-80 transition-opacity" href="#">Community</a>
+<a class="text-primary dark:text-inverse-primary font-label-md text-label-md hover:opacity-80 transition-opacity font-bold" href="#">Profile</a>
+</nav>
+<button class="active:scale-95 transition-transform text-primary dark:text-inverse-primary">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<main class="w-full max-w-[1200px] mx-auto md:pt-lg">
+<div class="md:grid md:grid-cols-12 md:gap-gutter px-container-margin md:px-0 mt-container-margin md:mt-0">
+<!-- Mobile Header Profile -->
+<div class="md:col-span-12 flex flex-col items-center pt-md pb-lg">
+<div class="w-24 h-24 rounded-full overflow-hidden mb-sm shadow-lg ring-4 ring-surface-container">
+<img alt="Profile Photo" class="w-full h-full object-cover" data-alt="A close-up portrait of an approachable man in his early 30s with short dark hair and a warm, genuine smile. He is wearing a casual teal zip-up hoodie over a plain white t-shirt. The background is slightly blurred showing a sunny, modern neighborhood cafe setting. Bright, natural daylight creates a welcoming and friendly aesthetic consistent with a community-focused app profile picture." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6B3IebHn2ruRYDWtj-64twaDTSMf8QE1SAKU-_by5QDBUK2o2vHGEE3-Nqz1GTjYLGAmxA0HQMMAdDRc4hkTAVhF_gvEwjbS7dfQnYBTmrzylolg6KrfUMhL_Fwr1ftu5T2JkNmfE7QvLQy7TdGybS3YIASmTL1hnfKbH6dXC2SelJgvvGxcbJ6856QSt4Ek7kg3M4v3t22roTsWSogytT6A8eP_SSyrWjWCPmUyOCJ0Q0YWkrnRdYA"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg text-on-surface mb-xs">Mike Ross</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">+1 (•••) •••-4567</p>
+</div>
+<div class="md:col-span-8 md:col-start-3 lg:col-span-6 lg:col-start-4 flex flex-col gap-lg">
+<!-- Activity Section -->
+<section>
+<h2 class="font-headline-md text-headline-md mb-md text-on-surface">Activity</h2>
+<div class="flex flex-col gap-gutter">
+<!-- Posts Card -->
+<div class="bg-surface-container-lowest rounded-[16px] p-container-margin shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex items-center gap-sm">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined icon-fill" data-icon="article">article</span>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface text-base">My Posts</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant font-normal">12 updates shared</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+<!-- Businesses Card -->
+<div class="bg-surface-container-lowest rounded-[16px] p-container-margin shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow">
+<div class="flex items-center gap-sm">
+<div class="w-12 h-12 rounded-[12px] overflow-hidden bg-surface-container shrink-0">
+<img alt="Greenwood Cafe" class="w-full h-full object-cover" data-alt="A small thumbnail image showing the exterior of a cozy neighborhood cafe named Greenwood Cafe. The cafe has a modern aesthetic with teal awnings, large clean glass windows, and a few small wooden tables outside. Bright natural lighting highlights the welcoming community vibe of the establishment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8uR6bOVN36nl9-QSgRUln5lLXaHVvfG5x2Pw0MU7YFyNSsd9p-c9-bvJOYyiZbMTqnE_ysE-UDSyEf1D951uI1ZyNHnk4MVnkueBFwye8sFA1gybT-lOQ9U39Y0MuiqG6XoR-GRH6SfOSUg-yBOE2sCLkB7kZQVsZ9G55fcV1o-CczScsAtZkQrN-nIL_uUxBMj8g_2W8taOYrmjG0n2jFIA5rbE_4DtUCPj9g8obvvg9Wb5uDfnpAw"/>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface text-base">My Businesses</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant font-normal">Greenwood Cafe</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Preferences Section -->
+<section>
+<h2 class="font-headline-md text-headline-md mb-md text-on-surface">Preferences</h2>
+<div class="bg-surface-container-lowest rounded-[16px] shadow-[0px_4px_20px_rgba(0,0,0,0.04)] overflow-hidden">
+<!-- Radius -->
+<div class="p-container-margin border-b border-surface-container">
+<div class="flex justify-between items-center mb-sm">
+<span class="font-body-md text-body-md text-on-surface">Discovery Radius</span>
+<span class="font-label-md text-label-md text-primary bg-surface-container px-3 py-1 rounded-full">5 km</span>
+</div>
+<input class="w-full h-2 bg-surface-container rounded-lg appearance-none cursor-pointer accent-primary-container" max="20" min="1" type="range" value="5"/>
+</div>
+<!-- Notifications -->
+<div class="p-container-margin border-b border-surface-container flex justify-between items-center">
+<span class="font-body-md text-body-md text-on-surface">Push Notifications</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:border-surface-container after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Language -->
+<div class="p-container-margin flex justify-between items-center cursor-pointer hover:bg-surface-container-lowest transition-colors">
+<span class="font-body-md text-body-md text-on-surface">App Language</span>
+<div class="flex items-center gap-xs text-on-surface-variant">
+<span class="font-label-md text-label-md">English</span>
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer Action -->
+<div class="flex justify-center pt-md pb-xl">
+<button class="font-label-md text-label-md text-error px-6 py-3 rounded-full hover:bg-error-container transition-colors">
+                        Log Out
+                    </button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface dark:bg-surface-container-highest shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] md:hidden">
+<div class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-2 px-4 bg-surface dark:bg-surface-container-highest">
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:bg-secondary-container dark:hover:bg-secondary transition-colors rounded-full active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:bg-secondary-container dark:hover:bg-secondary transition-colors rounded-full active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="storefront">storefront</span>
+<span class="font-label-sm text-label-sm">Business</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-4 py-1 hover:bg-secondary-container dark:hover:bg-secondary transition-colors rounded-full active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="groups">groups</span>
+<span class="font-label-sm text-label-sm">Community</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-full px-4 py-1 hover:bg-secondary-container dark:hover:bg-secondary transition-colors active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mb-1 icon-fill" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>

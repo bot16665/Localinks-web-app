@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LocalLink - Community Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "surface": "#f8f9ff",
+                            "tertiary-fixed": "#ffdbcb",
+                            "surface-container-highest": "#d3e4fe",
+                            "on-primary-fixed": "#002020",
+                            "tertiary-container": "#d87d4d",
+                            "tertiary": "#95491d",
+                            "error-container": "#ffdad6",
+                            "on-background": "#0b1c30",
+                            "on-secondary": "#ffffff",
+                            "inverse-on-surface": "#eaf1ff",
+                            "on-primary-fixed-variant": "#004f50",
+                            "background": "#f8f9ff",
+                            "on-surface-variant": "#3d4949",
+                            "secondary-fixed-dim": "#bfc8c8",
+                            "on-primary": "#ffffff",
+                            "on-tertiary-container": "#511e00",
+                            "surface-bright": "#f8f9ff",
+                            "secondary-container": "#d8e1e1",
+                            "on-primary-container": "#003333",
+                            "error": "#ba1a1a",
+                            "secondary-fixed": "#dbe4e4",
+                            "secondary": "#576060",
+                            "on-secondary-container": "#5b6465",
+                            "outline": "#6d7a79",
+                            "outline-variant": "#bcc9c8",
+                            "inverse-primary": "#5ed8d8",
+                            "on-secondary-fixed": "#151d1d",
+                            "on-error": "#ffffff",
+                            "surface-tint": "#006a6a",
+                            "primary-fixed": "#7df5f5",
+                            "primary": "#006a6a",
+                            "surface-container-low": "#eff4ff",
+                            "inverse-surface": "#213145",
+                            "tertiary-fixed-dim": "#ffb692",
+                            "surface-container-lowest": "#ffffff",
+                            "surface-dim": "#cbdbf5",
+                            "on-tertiary-fixed-variant": "#773206",
+                            "on-secondary-fixed-variant": "#404849",
+                            "on-surface": "#0b1c30",
+                            "surface-container-high": "#dce9ff",
+                            "on-error-container": "#93000a",
+                            "surface-variant": "#d3e4fe",
+                            "surface-container": "#e5eeff",
+                            "primary-fixed-dim": "#5ed8d8",
+                            "on-tertiary": "#ffffff",
+                            "primary-container": "#0ea5a5",
+                            "on-tertiary-fixed": "#341100"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "lg": "40px",
+                            "xs": "4px",
+                            "container-margin": "20px",
+                            "gutter": "16px",
+                            "base": "8px",
+                            "xl": "64px",
+                            "sm": "12px",
+                            "md": "24px"
+                    },
+                    "fontFamily": {
+                            "headline-lg": ["Inter"],
+                            "display-lg": ["Inter"],
+                            "headline-lg-mobile": ["Inter"],
+                            "label-md": ["Inter"],
+                            "body-md": ["Inter"],
+                            "headline-md": ["Inter"],
+                            "label-sm": ["Inter"],
+                            "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                            "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                            "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                            "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #f8f9ff; /* surface */ }
+        .ambient-shadow-card { box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04); }
+        .ambient-shadow-fab { box-shadow: 0px 12px 32px rgba(14, 165, 165, 0.1); }
+        /* Hide scrollbar for filter tabs */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="font-body-md text-body-md text-on-surface antialiased bg-surface pb-[80px]">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim w-full top-0 sticky z-40 shadow-sm dark:shadow-none shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="flex justify-between items-center px-container-margin py-base w-full max-w-7xl mx-auto">
+<button aria-label="Location" class="flex items-center justify-center p-2 text-primary dark:text-primary-fixed hover:bg-secondary-container/50 dark:hover:bg-on-surface/10 transition-colors active:scale-95 duration-200 rounded-full">
+<span class="material-symbols-outlined" data-icon="location_on" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed text-center flex-1 truncate px-4">
+                LocalLink
+            </h1>
+<button aria-label="Notifications" class="flex items-center justify-center p-2 text-on-surface-variant dark:text-outline-variant hover:bg-secondary-container/50 dark:hover:bg-on-surface/10 transition-colors active:scale-95 duration-200 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+<!-- Location Subheader -->
+<div class="px-container-margin pb-3 pt-1 flex items-center justify-center gap-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Greenwood Estates</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
+</div>
+</header>
+<!-- Main Content -->
+<main class="w-full max-w-3xl mx-auto px-container-margin pt-4 pb-24">
+<!-- Filter Tabs -->
+<div class="flex overflow-x-auto no-scrollbar gap-3 mb-6 pb-2">
+<button class="px-4 py-2 rounded-full bg-primary-container text-on-primary-container font-label-md text-label-md whitespace-nowrap active:scale-95 transition-transform duration-200">
+                All
+            </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest font-label-md text-label-md whitespace-nowrap active:scale-95 transition-transform duration-200">
+                Help Request
+            </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest font-label-md text-label-md whitespace-nowrap active:scale-95 transition-transform duration-200">
+                Notice
+            </button>
+<button class="px-4 py-2 rounded-full bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest font-label-md text-label-md whitespace-nowrap active:scale-95 transition-transform duration-200">
+                General
+            </button>
+</div>
+<!-- Feed Container -->
+<div class="flex flex-col gap-gutter">
+<!-- Card 1: Notice -->
+<article class="bg-surface-container-lowest rounded-xl ambient-shadow-card p-[20px] active:scale-[0.99] transition-transform duration-200">
+<div class="flex justify-between items-start mb-3">
+<span class="px-3 py-1 bg-surface-container-highest text-primary font-label-sm text-label-sm rounded-full">Notice</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">2h ago</span>
+</div>
+<h2 class="font-headline-md text-[20px] leading-[28px] font-semibold text-on-surface mb-2">Annual General Meeting</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 line-clamp-2">
+                    The annual meeting will be held this Sunday at the clubhouse. We will be discussing the new budget and upcoming community events. Please ensure at least one representative from each household attends.
+                </p>
+<div class="flex items-center justify-between border-t border-outline-variant/30 pt-3 mt-2">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-label-md">
+                            SC
+                        </div>
+<span class="font-label-md text-label-md text-on-surface">Society Committee</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
+<span class="font-label-md text-label-md">5</span>
+</div>
+</div>
+</article>
+<!-- Card 2: Help Request -->
+<article class="bg-surface-container-lowest rounded-xl ambient-shadow-card p-[20px] active:scale-[0.99] transition-transform duration-200">
+<div class="flex justify-between items-start mb-3">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm rounded-full">Help Request</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">4h ago</span>
+</div>
+<h2 class="font-headline-md text-[20px] leading-[28px] font-semibold text-on-surface mb-2">Plumber Recommendation?</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 line-clamp-3">
+                    Does anyone have a reliable plumber they've used recently? My kitchen sink is leaking and I need someone to come take a look as soon as possible. Any recommendations would be greatly appreciated!
+                </p>
+<div class="flex items-center justify-between border-t border-outline-variant/30 pt-3 mt-2">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A smiling woman with shoulder-length brown hair, soft natural lighting, headshot portrait for a profile picture, modern light mode aesthetic, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrHL6k3uXHXY7jLxpAQ2H5HmFOyzaWPk3SNeSXFzc-MSTsiAh6TnM_Ek2XW3KLxF4-wG4mOTK1HG2EOeo8zW0SqEYYTa49WbEWLNFFB6mq1iKFBRT7vE9NMyp-i3uyg1kocJphOBGsvPUYB9OGlkNIADJUufqqC7X26Tfomi38nS-tSnrdyaAzOG8773v14aRPxv4uqnEG_OXO89fIfv_m1rM3JrmG9YthFgl4iiaqpqLnS_Xaiaom1g"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Sarah Jenkins</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
+<span class="font-label-md text-label-md">12</span>
+</div>
+</div>
+</article>
+<!-- Card 3: General -->
+<article class="bg-surface-container-lowest rounded-xl ambient-shadow-card p-[20px] active:scale-[0.99] transition-transform duration-200">
+<div class="flex justify-between items-start mb-3">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container font-label-sm text-label-sm rounded-full">General</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">6h ago</span>
+</div>
+<h2 class="font-headline-md text-[20px] leading-[28px] font-semibold text-on-surface mb-2">Beautiful Sunset today!</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-3">
+                    Caught this view from the balcony this evening. We live in a beautiful place!
+                </p>
+<div class="w-full h-40 rounded-lg mb-4 overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="A stunning vibrant sunset over a suburban neighborhood, rich orange and pink hues in the sky, silhouetted trees and rooftops, warm glowing light, high quality photographic style, modern light mode aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXRLBPdQ4k2PueRNECLZma5N5WjpimO4jq0hthP9-x3USRTjQNTc1Qry2hAkA1u0c7s7DSq9Yy0UK0bAtrKYigMpmaGHk8IlWQ3Z_KcH5YNxa-5WvaJ7kZC-16G0VKSXP0c66qQ2kb6XDI6ZSQnO_C9SnWM72QmKuw-3uas2ej-3vSwe-YlwD87-xvliKoYw7PzMS4gGz3UE3Or3_23ZvifkJESe1yNzRiA6q_ie1Nz6TtR0oj8manLg"/>
+</div>
+<div class="flex items-center justify-between border-t border-outline-variant/30 pt-3 mt-2">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A man with glasses and a light beard smiling, casual outdoors portrait, sunny day, headshot for profile picture, modern light mode aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZANhh95_xdh145XAo8mtLNleFGmce29tMfp7V3t5glq56GHv2M9e2AZ3A9eDGHNrm3ZQYKtbSnp4sMvxdQ-rtmXVD5sMIBHVsYAzHQU0ztp12wMp-pOTGDS_HowMeVLjd7KUna6PslOF0bEabc6J9H8wmWCbe4bbqLt5UJWjcvWWAuS5ZfLNrVDrLoE4JoRYiRE3XlNM01NijSqxmxbSVQ8Ch9y6yeka2N23sCd5DagLOtNhDxE6wVA"/>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Mike Ross</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
+<span class="font-label-md text-label-md">8</span>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button aria-label="Create Post" class="fixed bottom-[90px] right-container-margin w-14 h-14 bg-primary-container text-on-primary-container rounded-2xl flex items-center justify-center ambient-shadow-fab active:scale-95 transition-transform duration-200 z-40 md:hidden">
+<span class="material-symbols-outlined text-[28px]">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="bg-surface dark:bg-surface-dim fixed bottom-0 w-full z-50 rounded-t-xl md:hidden font-label-md text-label-md">
+<div class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 bg-surface">
+<!-- Nearby (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-5 py-1 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all active:scale-90 duration-150 rounded-lg w-20">
+<span class="material-symbols-outlined mb-1">explore</span>
+<span>Nearby</span>
+</button>
+<!-- Business (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-5 py-1 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all active:scale-90 duration-150 rounded-lg w-20">
+<span class="material-symbols-outlined mb-1">storefront</span>
+<span>Business</span>
+</button>
+<!-- Community (Active) -->
+<button class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full px-5 py-1 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all active:scale-90 duration-150 w-24">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span>Community</span>
+</button>
+</div>
+</nav>
+</body></html>

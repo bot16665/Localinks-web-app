@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phone Number Onboarding - Localink</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#213145",
+                        "primary": "#006a6a",
+                        "on-tertiary-fixed-variant": "#773206",
+                        "on-secondary-fixed": "#151d1d",
+                        "surface-tint": "#006a6a",
+                        "on-error": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "tertiary": "#95491d",
+                        "outline-variant": "#bcc9c8",
+                        "secondary": "#576060",
+                        "primary-fixed-dim": "#5ed8d8",
+                        "outline": "#6d7a79",
+                        "surface-container-high": "#dce9ff",
+                        "surface": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#dbe4e4",
+                        "on-tertiary-fixed": "#341100",
+                        "tertiary-fixed": "#ffdbcb",
+                        "inverse-primary": "#5ed8d8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-container": "#d8e1e1",
+                        "on-primary-container": "#003333",
+                        "on-tertiary-container": "#511e00",
+                        "on-surface-variant": "#3d4949",
+                        "tertiary-container": "#d87d4d",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-fixed-variant": "#404849",
+                        "secondary-fixed-dim": "#bfc8c8",
+                        "on-primary-fixed-variant": "#004f50",
+                        "on-primary-fixed": "#002020",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#cbdbf5",
+                        "primary-fixed": "#7df5f5",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "on-background": "#0b1c30",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#5b6465",
+                        "surface-container-low": "#eff4ff",
+                        "background": "#f8f9ff",
+                        "surface-variant": "#d3e4fe",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary-container": "#0ea5a5",
+                        "surface-container": "#e5eeff",
+                        "surface-container-highest": "#d3e4fe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "40px",
+                        "md": "24px",
+                        "xs": "4px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "container-margin": "20px",
+                        "gutter": "16px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom input focus styles matching guidelines */
+        .input-group:focus-within {
+            background-color: #ffffff;
+            outline: 2px solid #006a6a;
+        }
+        /* Hide default number input arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation (Minimal for Onboarding) -->
+<header class="flex items-center px-container-margin h-16 w-full max-w-7xl mx-auto flex-none bg-background">
+<button aria-label="Go back" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-secondary-container transition-colors active:scale-95 duration-150 text-on-surface">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col px-container-margin pt-md pb-lg max-w-xl mx-auto w-full">
+<!-- Headers -->
+<div class="mb-lg">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-xs tracking-tight">
+                Enter your phone number
+            </h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                We'll send you a verification code
+            </p>
+</div>
+<!-- Input Section -->
+<div class="flex-grow">
+<!-- Custom Input Group -->
+<div class="input-group flex items-center bg-surface-container-low rounded-xl h-14 px-sm transition-all duration-200">
+<!-- Country Code Selector -->
+<button class="flex items-center gap-1 pl-2 pr-3 py-2 border-r border-outline-variant hover:bg-surface-variant rounded-md transition-colors text-on-surface" type="button">
+<img class="w-5 h-5 rounded-full object-cover" data-alt="A small circular icon of the United States flag, clean, modern, simple design, light mode background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuFkM2vY-kuCWQIZXbDMrT5Qck2r79qSBRl5s2x_r-NcBJtaXJtYELGY2_Pwn91_zTOA1F0Z3dksHwFoAdeO69ulbEhwGUlHUB6VNFZQzRHcaie0YkIqHUVmZ165rMcmUrnZadUkLZjBSjf2aLS8TFMQksDqNGM4Z6N8KL6uFJwlbrUvgnnSpUmIWI9gwEX2Xyc8fYT8LMZJHrl9uFGErcobDhTD0cOZHc7wvrmx1lgtIuQ3xpFOe7BQ"/>
+<span class="font-body-lg text-body-lg ml-1">+1</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" style="font-variation-settings: 'FILL' 0;">arrow_drop_down</span>
+</button>
+<!-- Phone Number Input -->
+<input autocomplete="tel-national" class="flex-grow bg-transparent border-none focus:ring-0 font-body-lg text-body-lg text-on-surface placeholder:text-outline px-4 h-full w-full" placeholder="000 000 0000" type="tel"/>
+</div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-sm px-1 opacity-70">
+                Standard message and data rates may apply.
+            </p>
+</div>
+</main>
+<!-- Bottom Action Area -->
+<footer class="px-container-margin py-md pb-8 max-w-xl mx-auto w-full flex-none bg-background">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md h-14 rounded-xl shadow-[0px_4px_20px_rgba(0,106,106,0.15)] hover:bg-on-primary-fixed-variant active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+            Continue
+        </button>
+</footer>
+</body></html>

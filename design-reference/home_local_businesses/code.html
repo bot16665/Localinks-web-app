@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Greenwood Estates - Business Directory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#3d4949",
+                        "surface-tint": "#006a6a",
+                        "on-secondary-container": "#5b6465",
+                        "secondary-container": "#d8e1e1",
+                        "surface-container": "#e5eeff",
+                        "error": "#ba1a1a",
+                        "on-background": "#0b1c30",
+                        "secondary-fixed-dim": "#bfc8c8",
+                        "surface": "#f8f9ff",
+                        "on-surface": "#0b1c30",
+                        "background": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-container": "#003333",
+                        "on-primary-fixed-variant": "#004f50",
+                        "primary-container": "#0ea5a5",
+                        "on-tertiary-fixed": "#341100",
+                        "on-primary-fixed": "#002020",
+                        "surface-container-highest": "#d3e4fe",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-fixed": "#dbe4e4",
+                        "outline": "#6d7a79",
+                        "primary": "#006a6a",
+                        "outline-variant": "#bcc9c8",
+                        "inverse-surface": "#213145",
+                        "tertiary-fixed": "#ffdbcb",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#eff4ff",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#5ed8d8",
+                        "secondary": "#576060",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#511e00",
+                        "primary-fixed": "#7df5f5",
+                        "tertiary-container": "#d87d4d",
+                        "on-secondary-fixed-variant": "#404849",
+                        "on-secondary-fixed": "#151d1d",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#5ed8d8",
+                        "tertiary": "#95491d",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "surface-variant": "#d3e4fe",
+                        "on-tertiary-fixed-variant": "#773206"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "40px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "md": "24px",
+                        "xl": "64px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "headline-lg-mobile": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "display-lg": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen pb-[80px]">
+<!-- TopAppBar -->
+<header class="w-full top-0 bg-background flex items-center justify-between px-container-margin h-16 max-w-7xl mx-auto z-40 sticky">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">location_on</span>
+<h1 class="font-headline-md text-headline-md text-on-background">Greenwood Estates</h1>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 hover:bg-secondary-container transition-colors rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+</button>
+<button class="p-2 hover:bg-secondary-container transition-colors rounded-full active:scale-95 duration-150 relative">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-error rounded-full border border-background"></span>
+</button>
+</div>
+</header>
+<main class="px-container-margin pt-sm flex flex-col gap-lg max-w-7xl mx-auto">
+<!-- Categories (Bento-ish Grid) -->
+<section>
+<h2 class="font-headline-md text-lg font-semibold text-on-surface mb-md">Categories</h2>
+<div class="grid grid-cols-3 gap-gutter">
+<!-- Cafe Category -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex flex-col items-center justify-center gap-2 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow active:scale-95 duration-150 cursor-pointer aspect-square">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-1">
+<span class="material-symbols-outlined">local_cafe</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Cafes</span>
+</div>
+<!-- Groceries Category -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex flex-col items-center justify-center gap-2 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow active:scale-95 duration-150 cursor-pointer aspect-square">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-1">
+<span class="material-symbols-outlined">local_grocery_store</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Groceries</span>
+</div>
+<!-- Services Category -->
+<div class="bg-surface-container-lowest rounded-xl p-4 flex flex-col items-center justify-center gap-2 shadow-[0px_4px_20px_rgba(0,0,0,0.04)] hover:shadow-md transition-shadow active:scale-95 duration-150 cursor-pointer aspect-square">
+<div class="w-12 h-12 rounded-full bg-surface-container-low flex items-center justify-center text-primary mb-1">
+<span class="material-symbols-outlined">plumbing</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface">Services</span>
+</div>
+</div>
+</section>
+<!-- Featured Businesses -->
+<section>
+<div class="flex justify-between items-end mb-md">
+<h2 class="font-headline-md text-lg font-semibold text-on-surface">Featured Local</h2>
+<button class="font-label-sm text-label-sm text-primary hover:underline">View All</button>
+</div>
+<div class="flex flex-col gap-gutter">
+<!-- The Daily Grind Coffee -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-row active:scale-[0.98] transition-transform duration-150">
+<div class="w-[120px] h-full shrink-0 relative">
+<img alt="The Daily Grind Coffee" class="w-full h-full object-cover absolute inset-0" data-alt="A warm, inviting storefront of a local cafe named 'The Daily Grind' viewed from the street level. The cafe features large glass windows showing patrons inside, potted plants by the entrance, and a cozy atmosphere. The lighting suggests early morning with soft, natural sunlight illuminating the modern yet rustic exterior design. Contemporary Minimalist style, high-clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBL0ChmJSPjRKQjEx_52l1w7z9aOdXIrjfylp6ll1SaxiveibE7hSDOST6Npxx8DlBzKIW6Uxs9I9n3wabMwUJ1w9y1xjFtTYrDzYhz-D_MvkcsLRjyLW-M9S4jqm_pPmbhhlZZLL-l_IrKw0KkbxgfQBmx1Uc-ojh-GgFtbLDEzkzqAal1yI6PF6sBSn2OWEigUrjX12sxrLbDInVdrte2TCmEG0lm5zmuOMulDjrwwbFLt_1oUk0SA"/>
+<div class="absolute top-2 left-2 bg-surface-container-lowest/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-primary fill">star</span>
+<span class="font-label-sm text-label-sm text-on-surface">4.8</span>
+</div>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-headline-md text-base font-semibold text-on-surface leading-tight">The Daily Grind Coffee</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">bookmark_border</span>
+</button>
+</div>
+<p class="font-body-md text-sm text-on-surface-variant mb-2">Artisan coffee &amp; fresh pastries</p>
+</div>
+<div class="flex items-center justify-between mt-auto">
+<span class="inline-flex items-center gap-1 bg-surface-container-low text-primary px-2 py-1 rounded-full font-label-sm text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                Open Now
+                            </span>
+<span class="font-body-md text-xs text-on-surface-variant">0.2 mi</span>
+</div>
+</div>
+</div>
+<!-- Organic Mart -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-row active:scale-[0.98] transition-transform duration-150">
+<div class="w-[120px] h-full shrink-0 relative">
+<img alt="Organic Mart" class="w-full h-full object-cover absolute inset-0" data-alt="The exterior of a clean, well-lit local grocery store named 'Organic Mart'. Fresh produce is visibly displayed near the entrance under bright, welcoming lighting. The aesthetic is modern and fresh, with crisp greens and clean white signage. Shot from a slightly low angle emphasizing accessibility and community trust. Contemporary Minimalist style, high-clarity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUgx63X3MvScjWe4Z8-V2J6vBx4MEw3ZQdOzrUKjjxrF1Y1VzQ0k5jWtPtaimeXnGmW75Wjuf3GDT_La45LtJvvGBNbGjv2OJBlaGANAJfhFnwQ-_b8OJQ3y_UDcc1ULJWeFt2QjEf__KqQArDzCrna1RYa9G6cF_xf_DFDYQ13UYnCMEE1k4_Z4oMaNDVIAmt1pr05evA15t7ggV6n5-JDo9xo8xwFJ415tMTXvv06YdOKV25VhwNPg"/>
+<div class="absolute top-2 left-2 bg-surface-container-lowest/90 backdrop-blur-sm px-2 py-1 rounded-md flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-primary fill">star</span>
+<span class="font-label-sm text-label-sm text-on-surface">4.5</span>
+</div>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-headline-md text-base font-semibold text-on-surface leading-tight">Organic Mart</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">bookmark_border</span>
+</button>
+</div>
+<p class="font-body-md text-sm text-on-surface-variant mb-2">Local organic produce &amp; goods</p>
+</div>
+<div class="flex items-center justify-between mt-auto">
+<span class="inline-flex items-center gap-1 bg-surface-container-low text-primary px-2 py-1 rounded-full font-label-sm text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                Open Now
+                            </span>
+<span class="font-body-md text-xs text-on-surface-variant">0.5 mi</span>
+</div>
+</div>
+</div>
+<!-- Neighborhood Pharmacy -->
+<div class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-row active:scale-[0.98] transition-transform duration-150">
+<div class="w-[120px] h-full shrink-0 relative bg-surface-container-low flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-secondary-fixed-dim">local_pharmacy</span>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-xs">
+<h3 class="font-headline-md text-base font-semibold text-on-surface leading-tight">Neighborhood Pharmacy</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">bookmark_border</span>
+</button>
+</div>
+<p class="font-body-md text-sm text-on-surface-variant mb-2">Health supplies &amp; prescriptions</p>
+</div>
+<div class="flex items-center justify-between mt-auto">
+<span class="inline-flex items-center gap-1 bg-surface-container-low text-on-surface-variant px-2 py-1 rounded-full font-label-sm text-[10px]">
+<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
+                                Closes at 8 PM
+                            </span>
+<span class="font-body-md text-xs text-on-surface-variant">0.8 mi</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Customized based on prompt) -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-safe bg-surface-container-lowest z-50 rounded-t-xl shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] shadow-md md:hidden">
+<!-- Nearby Tab (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-200 w-16 h-12 rounded-lg">
+<span class="material-symbols-outlined">near_me</span>
+<span class="font-label-sm text-[10px] mt-1">Nearby</span>
+</button>
+<!-- Business Tab (Active) -->
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 hover:bg-surface-container-high transition-all active:scale-95 duration-200 h-12 min-w-[80px]">
+<span class="material-symbols-outlined fill">storefront</span>
+<span class="font-label-sm text-[10px] mt-1 font-semibold">Business</span>
+</button>
+<!-- Community Tab (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all active:scale-95 duration-200 w-16 h-12 rounded-lg">
+<span class="material-symbols-outlined">forum</span>
+<span class="font-label-sm text-[10px] mt-1">Community</span>
+</button>
+</nav>
+</body></html>

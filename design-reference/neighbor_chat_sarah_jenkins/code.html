@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Neighbor Chat - LocalLink</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#ffdbcb",
+                        "on-primary-fixed-variant": "#004f50",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#006a6a",
+                        "surface-dim": "#cbdbf5",
+                        "on-secondary-fixed": "#151d1d",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed-dim": "#5ed8d8",
+                        "primary-fixed": "#7df5f5",
+                        "primary-container": "#0ea5a5",
+                        "secondary-fixed-dim": "#bfc8c8",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-primary-fixed": "#002020",
+                        "outline": "#6d7a79",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "surface-bright": "#f8f9ff",
+                        "surface-variant": "#d3e4fe",
+                        "on-primary-container": "#003333",
+                        "on-primary": "#ffffff",
+                        "inverse-surface": "#213145",
+                        "on-background": "#0b1c30",
+                        "surface-tint": "#006a6a",
+                        "secondary-container": "#d8e1e1",
+                        "on-error-container": "#93000a",
+                        "secondary-fixed": "#dbe4e4",
+                        "on-secondary-fixed-variant": "#404849",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-secondary-container": "#5b6465",
+                        "surface": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "background": "#f8f9ff",
+                        "on-tertiary-container": "#511e00",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#95491d",
+                        "on-tertiary-fixed": "#341100",
+                        "inverse-primary": "#5ed8d8",
+                        "on-tertiary-fixed-variant": "#773206",
+                        "secondary": "#576060",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#dce9ff",
+                        "on-surface-variant": "#3d4949",
+                        "on-surface": "#0b1c30",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#d87d4d",
+                        "surface-container": "#e5eeff",
+                        "outline-variant": "#bcc9c8"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "40px",
+                        "md": "24px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "sm": "12px",
+                        "xl": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full bg-surface dark:bg-on-background shadow-sm z-40">
+<div class="flex items-center justify-between px-gutter h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-sm">
+<button class="p-2 -ml-2 text-on-surface-variant hover:bg-surface-container rounded-full transition-colors active:scale-95 duration-100 md:hidden">
+<span class="material-symbols-outlined" data-icon="arrow_back" data-weight="regular">arrow_back</span>
+</button>
+<div class="relative">
+<img alt="Sarah Jenkins profile photo" class="w-10 h-10 rounded-full object-cover shadow-[0px_4px_20px_rgba(0,0,0,0.04)]" data-alt="Close-up portrait of a friendly young woman with curly hair, smiling warmly. She is in a bright, sunlit outdoor setting, suggesting a neighborly and approachable vibe. The lighting is soft and natural, highlighting her features against a slightly blurred background of green foliage. The overall mood is welcoming and trustworthy, perfectly aligning with a community app's aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfEXSbM5qQ-ErUWung6zGQby2jhWLxf6gbdaPdwD-OlUFHu-ON9oqGizeIAzrXll9LRoKXBqr89q465mA0LD6F2qF-WrxHn6QxooWD7sXJa2bPlkkuW4j6maw-fpdkVlO30C-aUdAGSlJVkjrIVH3xBlkUgdvwcbS2r-898lviJLg1OnFlhm5TRMEYrCQQV5lF97onDodzH3TeM_ASVRCZtXgrPVN1Cj5KafYtQmf8v1EknH7th81mMw"/>
+<div class="absolute bottom-0 right-0 w-3 h-3 bg-primary-container rounded-full border-2 border-surface"></div>
+</div>
+<div class="flex flex-col">
+<h1 class="font-headline-md text-[18px] leading-tight text-on-background font-semibold">Sarah Jenkins</h1>
+<span class="font-label-sm text-label-sm text-primary-container">Online</span>
+</div>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container transition-colors active:scale-95 duration-100 rounded-full">
+<span class="material-symbols-outlined" data-icon="more_vert" data-weight="regular">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Message Feed Canvas -->
+<main class="flex-1 w-full max-w-7xl mx-auto mt-16 mb-20 md:mb-0 px-container-margin py-md flex flex-col gap-md overflow-y-auto">
+<!-- Date Divider -->
+<div class="flex justify-center my-2">
+<span class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm px-3 py-1 rounded-full">Today</span>
+</div>
+<!-- Received Message -->
+<div class="flex gap-sm items-end max-w-[85%] md:max-w-[70%]">
+<img alt="Sarah" class="w-8 h-8 rounded-full object-cover hidden sm:block flex-shrink-0 mb-1" data-alt="Close-up portrait of a friendly young woman with curly hair, smiling warmly. She is in a bright, sunlit outdoor setting, suggesting a neighborly and approachable vibe. The lighting is soft and natural, highlighting her features against a slightly blurred background of green foliage. The overall mood is welcoming and trustworthy, perfectly aligning with a community app's aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVMWrsSO8JoQKbvM_mSsqsbkZcTJHCTctsrnrhZjeWZZtK3u6ctLW5vH1PPbwCzWZnyPil-D6XOB9__c8t8uIsijwLMi0NsnQ-5DBDfre6eR5367ze2PzV-bcchisPkrQHVoBMiD2PaAfJbjoPd7uKXZMNi-1RXopfsWfpZbOMBQt6QcUodGpBhJukDw1lL_dpCnmaEdptluCIFQzApsceTGj28YJOynzK5GjL2ZL5hSVk-J4GNnMgVA"/>
+<div class="flex flex-col gap-1 items-start">
+<div class="bg-surface-container-low text-on-background px-4 py-3 rounded-2xl rounded-bl-sm shadow-[0px_4px_20px_rgba(0,0,0,0.04)] font-body-md text-body-md">
+                    Hi! I saw your post about the missing cat. I think I saw one matching that description near the park this morning.
+                </div>
+<span class="font-label-sm text-[10px] text-on-surface-variant ml-1">10:05 AM</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex gap-sm items-end justify-end max-w-[85%] md:max-w-[70%] self-end">
+<div class="flex flex-col gap-1 items-end">
+<div class="bg-primary-container text-on-primary px-4 py-3 rounded-2xl rounded-br-sm shadow-[0px_4px_20px_rgba(0,0,0,0.04)] font-body-md text-body-md">
+                    Oh my goodness, really?! Was it a ginger tabby with a white paw?
+                </div>
+<span class="font-label-sm text-[10px] text-on-surface-variant mr-1 flex items-center gap-1">
+                    10:07 AM
+                    <span class="material-symbols-outlined text-[14px] text-primary" data-icon="done_all" data-weight="regular">done_all</span>
+</span>
+</div>
+</div>
+<!-- Received Message -->
+<div class="flex gap-sm items-end max-w-[85%] md:max-w-[70%]">
+<img alt="Sarah" class="w-8 h-8 rounded-full object-cover hidden sm:block flex-shrink-0 mb-1" data-alt="Close-up portrait of a friendly young woman with curly hair, smiling warmly. She is in a bright, sunlit outdoor setting, suggesting a neighborly and approachable vibe. The lighting is soft and natural, highlighting her features against a slightly blurred background of green foliage. The overall mood is welcoming and trustworthy, perfectly aligning with a community app's aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2nyz2U9F7MQjRNHOVQi3dpRRIwjslZK2rOloncKfdM2pwuYod4lbvSwMdEhCIi7K66rgPZMmDNZlymBrRLTUQiRXMYTcP-ELGJ7qUAw4KZsrymqDzl4tQXYAZTPNVuVnX31inePqIhKG1Fs_HVLRpxu1J1nnUOiXWL-D6htbOnm7kJuHMz6hqPRX2XwNz2RtVRm5AvfyeuMQgUxMN6XCn6HS0MEMjaNH6yI6CuqtEgh_nIXy6peJvSQ"/>
+<div class="flex flex-col gap-1 items-start">
+<div class="bg-surface-container-low text-on-background px-4 py-3 rounded-2xl rounded-bl-sm shadow-[0px_4px_20px_rgba(0,0,0,0.04)] font-body-md text-body-md">
+                    Yes! Exactly that. It was sitting under the big oak tree near the playground.
+                </div>
+<span class="font-label-sm text-[10px] text-on-surface-variant ml-1">10:09 AM</span>
+</div>
+</div>
+<!-- Sent Message -->
+<div class="flex gap-sm items-end justify-end max-w-[85%] md:max-w-[70%] self-end">
+<div class="flex flex-col gap-1 items-end">
+<div class="bg-primary-container text-on-primary px-4 py-3 rounded-2xl rounded-br-sm shadow-[0px_4px_20px_rgba(0,0,0,0.04)] font-body-md text-body-md">
+                    Thank you so much! I'm heading over there right now. I'll let you know if I find him.
+                </div>
+<span class="font-label-sm text-[10px] text-on-surface-variant mr-1 flex items-center gap-1">
+                    10:11 AM
+                    <span class="material-symbols-outlined text-[14px] text-on-surface-variant" data-icon="done" data-weight="regular">done</span>
+</span>
+</div>
+</div>
+</main>
+<!-- Bottom Input Area -->
+<div class="fixed bottom-0 w-full bg-surface dark:bg-on-background shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] z-40 pb-safe md:relative md:shadow-none border-t border-surface-container-low">
+<div class="w-full max-w-7xl mx-auto px-container-margin py-sm flex items-end gap-sm">
+<button class="p-2 text-primary hover:bg-surface-container-low rounded-full transition-colors active:scale-95 duration-100 flex-shrink-0 mb-1">
+<span class="material-symbols-outlined" data-icon="add_circle" data-weight="fill">add_circle</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-low rounded-full transition-colors active:scale-95 duration-100 flex-shrink-0 hidden sm:block mb-1">
+<span class="material-symbols-outlined" data-icon="image" data-weight="regular">image</span>
+</button>
+<div class="flex-1 bg-[#F1F5F9] rounded-xl flex items-center px-4 py-2 min-h-[48px] focus-within:bg-white focus-within:ring-2 focus-within:ring-primary-container transition-all">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 resize-none font-body-md text-body-md text-on-background placeholder-on-surface-variant max-h-32" oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'" placeholder="Type a message..." rows="1"></textarea>
+</div>
+<button class="w-12 h-12 bg-primary-container text-on-primary rounded-full flex items-center justify-center hover:bg-primary transition-colors shadow-[0px_4px_20px_rgba(14,165,165,0.1)] active:scale-95 duration-100 flex-shrink-0">
+<span class="material-symbols-outlined ml-1" data-icon="send" data-weight="fill">send</span>
+</button>
+</div>
+</div>
+</body></html>

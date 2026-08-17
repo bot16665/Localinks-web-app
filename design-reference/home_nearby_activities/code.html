@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Nearby</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#f8f9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#3d4949",
+                        "surface-tint": "#006a6a",
+                        "on-secondary-container": "#5b6465",
+                        "secondary-container": "#d8e1e1",
+                        "surface-container": "#e5eeff",
+                        "error": "#ba1a1a",
+                        "on-background": "#0b1c30",
+                        "secondary-fixed-dim": "#bfc8c8",
+                        "surface": "#f8f9ff",
+                        "on-surface": "#0b1c30",
+                        "background": "#f8f9ff",
+                        "surface-container-high": "#dce9ff",
+                        "on-primary-container": "#003333",
+                        "on-primary-fixed-variant": "#004f50",
+                        "primary-container": "#0ea5a5",
+                        "on-tertiary-fixed": "#341100",
+                        "on-primary-fixed": "#002020",
+                        "surface-container-highest": "#d3e4fe",
+                        "error-container": "#ffdad6",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-fixed": "#dbe4e4",
+                        "outline": "#6d7a79",
+                        "primary": "#006a6a",
+                        "outline-variant": "#bcc9c8",
+                        "inverse-surface": "#213145",
+                        "tertiary-fixed": "#ffdbcb",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "on-error-container": "#93000a",
+                        "surface-container-low": "#eff4ff",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#5ed8d8",
+                        "secondary": "#576060",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#511e00",
+                        "primary-fixed": "#7df5f5",
+                        "tertiary-container": "#d87d4d",
+                        "on-secondary-fixed-variant": "#404849",
+                        "on-secondary-fixed": "#151d1d",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#5ed8d8",
+                        "tertiary": "#95491d",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "surface-variant": "#d3e4fe",
+                        "on-tertiary-fixed-variant": "#773206"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "16px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "40px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "md": "24px",
+                        "xl": "64px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "sm": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ambient-shadow-md {
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04);
+        }
+        .ambient-shadow-lg {
+            box-shadow: 0px -4px 20px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-bright text-on-surface antialiased font-sans selection:bg-primary-container selection:text-on-primary-container min-h-screen pb-24 md:hidden">
+<!-- TopAppBar -->
+<header class="bg-background w-full top-0 sticky z-40 bg-background/80 backdrop-blur-md">
+<div class="flex items-center justify-between px-container-margin h-16 w-full max-w-7xl mx-auto">
+<div class="flex items-center gap-xs text-primary">
+<span class="material-symbols-outlined icon-fill text-[20px]">location_on</span>
+<h1 class="font-headline-md text-headline-md font-bold tracking-tight text-primary">Greenwood Estates</h1>
+<span class="material-symbols-outlined text-[20px] text-on-surface-variant">keyboard_arrow_down</span>
+</div>
+<div class="flex items-center gap-sm">
+<button aria-label="Search" class="p-2 rounded-full hover:bg-secondary-container transition-colors text-on-surface-variant active:scale-95 duration-150">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button aria-label="Notifications" class="p-2 rounded-full hover:bg-secondary-container transition-colors text-on-surface-variant active:scale-95 duration-150 relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-background"></span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="px-container-margin py-md flex flex-col gap-md max-w-7xl mx-auto">
+<!-- Tags / Chips Filter -->
+<div class="flex gap-base overflow-x-auto pb-2 scrollbar-hide -mx-container-margin px-container-margin">
+<button class="flex-shrink-0 bg-primary text-on-primary font-label-md text-label-md px-4 py-2 rounded-full active:scale-95 duration-150">All Activities</button>
+<button class="flex-shrink-0 bg-secondary-container text-primary font-label-md text-label-md px-4 py-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-150">#Events</button>
+<button class="flex-shrink-0 bg-secondary-container text-primary font-label-md text-label-md px-4 py-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-150">#Market</button>
+<button class="flex-shrink-0 bg-secondary-container text-primary font-label-md text-label-md px-4 py-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-150">#Fitness</button>
+</div>
+<!-- Section Title -->
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-background">Happening Near You</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-xs">Discover local events and groups.</p>
+</div>
+<!-- Feed Cards -->
+<div class="flex flex-col gap-gutter">
+<!-- Card 1 -->
+<article class="bg-surface-container-lowest rounded-xl ambient-shadow-md overflow-hidden flex flex-col p-container-margin transition-transform active:scale-[0.98]">
+<div class="flex gap-gutter">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="A bright, modern photograph of a group of diverse people practicing yoga on lush green grass in a local park. Soft morning sunlight filtering through trees. Teal yoga mats dotting the landscape, communicating a healthy, active community lifestyle. The image should feel welcoming, serene, and perfectly aligned with a contemporary minimalist local-app aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJlQDK_2HERC-kPEIK6awmsovkuwFDwizrYJjBi_Sk7hYg205sdAyWguFrotBfZBxlWtvdwN41FQbnaxc0KAwqi1Oy7o5OCaG8-iRg059rdEouVMuQ7uCfX6mLlxUg18zywlEJux-9dTj5T6lvVc528-7p7rLHhwTYeKJVEJ-rErPK_dG4hWDCUyp7ZsJwTPwStXqdf7VsyKNCdrQv0LzzKVwIAUlzCrcMPfL7kkcG8Fk3p5VfbS456A"/>
+<div class="absolute top-1 right-1 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full p-1">
+<span class="material-symbols-outlined text-[14px] text-primary">favorite_border</span>
+</div>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<div class="flex justify-between items-start">
+<span class="bg-secondary-container text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full inline-block mb-xs">Wellness</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-[2px]"><span class="material-symbols-outlined text-[14px]">near_me</span> 0.2 mi</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-background leading-tight text-[18px]">Yoga in the Park</h3>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md mt-sm">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>Today, 9:00 AM</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface-container-lowest rounded-xl ambient-shadow-md overflow-hidden flex flex-col p-container-margin transition-transform active:scale-[0.98]">
+<div class="flex gap-gutter">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="A bright, modern photograph of a well-organized neighborhood garage sale on a sunny driveway. Neat tables displaying vintage items, books, and home goods. A friendly neighbor chatting in the background. The lighting is cheerful and clear, capturing a sense of local community commerce in a contemporary, approachable style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyv6Yk01oivk0cssiB2Y71GTpX94l9KMsGg7DP-lhHKteCbFE4GiCUjNXv5LkXeizjUVVDEbhXSu9NYi__7Q2qFOFMzdfBbUK76VHMiHwse2qSWsEZw4nRyrV-XgWXmR_yMMxbISuV-g008c6znaXjKYPZlwLvJzUydtfiJ78CgoTSLU3actFC7cjhK-fephJs8vT7ENV-ZB_hlGN47k5Fx6m93317OPD0Zl7g5M2zFlCUi-iluy_pRQ"/>
+<div class="absolute top-1 right-1 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full p-1">
+<span class="material-symbols-outlined text-[14px] text-primary">favorite_border</span>
+</div>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<div class="flex justify-between items-start">
+<span class="bg-secondary-container text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full inline-block mb-xs">Market</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-[2px]"><span class="material-symbols-outlined text-[14px]">near_me</span> 0.5 mi</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-background leading-tight text-[18px]">Community Garage Sale</h3>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md mt-sm">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>Tomorrow, 8:00 AM</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface-container-lowest rounded-xl ambient-shadow-md overflow-hidden flex flex-col p-container-margin transition-transform active:scale-[0.98]">
+<div class="flex gap-gutter">
+<div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container relative">
+<img class="w-full h-full object-cover" data-alt="A bright, dynamic photograph of a small group of runners jogging along a paved suburban trail lined with trees. They are wearing modern, colorful athletic gear. The morning sun casts long, soft shadows. The image radiates energy, health, and friendly local camaraderie, fitting a modern community app design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVRKjxkxPMZ-Zp-ox95yu5EfC0fClacAGvI9Brt5rylWYfEXZ8STZtuq4bKslVqyF_JRBoyyeMPlzAVIG0eyU5nxcSwIcBqlHxR_tHAyxvkZ6qBoVWcyRdETuheYxNI-CUtV7NCzv9bAqvzGpW3E5buzSjJUKNgTfuXaX0ICODyhLDHz6mrT2owE3MpHx-4qmGC5ZDCJsXoOHWdP4G9VV9_6L4wcyZV6nUKh1lWYg6MAU5xh0p_DH1Vw"/>
+<div class="absolute top-1 right-1 bg-surface-container-lowest/80 backdrop-blur-sm rounded-full p-1">
+<span class="material-symbols-outlined text-[14px] text-primary">favorite_border</span>
+</div>
+</div>
+<div class="flex flex-col flex-1 justify-between">
+<div>
+<div class="flex justify-between items-start">
+<span class="bg-secondary-container text-primary font-label-sm text-label-sm px-2 py-0.5 rounded-full inline-block mb-xs">Fitness</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm flex items-center gap-[2px]"><span class="material-symbols-outlined text-[14px]">near_me</span> 1.2 mi</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-background leading-tight text-[18px]">Greenwood Running Club</h3>
+</div>
+<div class="flex items-center gap-xs text-on-surface-variant font-label-md text-label-md mt-sm">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>Wed, 6:00 PM</span>
+</div>
+</div>
+</div>
+</article>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface fixed bottom-0 w-full z-50 rounded-t-xl ambient-shadow-lg pb-safe">
+<div class="flex justify-around items-center px-4 py-3">
+<!-- Active Tab: Nearby (Home fallback for intent) -->
+<a aria-current="page" class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined icon-fill">home</span>
+<span class="font-label-md text-label-md mt-1">Nearby</span>
+</a>
+<!-- Inactive Tab: Business (Connect intent) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg p-2 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md mt-1">Business</span>
+</a>
+<!-- Inactive Tab: Community (Map intent) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all rounded-lg p-2 active:scale-95 duration-200" href="#">
+<span class="material-symbols-outlined">distance</span>
+<span class="font-label-md text-label-md mt-1">Community</span>
+</a>
+</div>
+</nav>
+<style>
+        /* Hide scrollbar for horizontal scroll area */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Safe area padding for bottom nav on newer devices */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .pb-safe {
+                padding-bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
+            }
+        }
+    </style>
+</body></html>

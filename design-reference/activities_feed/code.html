@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LocalLink - Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "on-secondary-fixed": "#151d1d",
+                      "on-secondary": "#ffffff",
+                      "primary-fixed": "#7df5f5",
+                      "secondary-fixed-dim": "#bfc8c8",
+                      "on-primary-fixed": "#002020",
+                      "tertiary-container": "#d87d4d",
+                      "secondary": "#576060",
+                      "primary-container": "#0ea5a5",
+                      "on-surface-variant": "#3d4949",
+                      "surface-tint": "#006a6a",
+                      "outline-variant": "#bcc9c8",
+                      "inverse-surface": "#213145",
+                      "on-primary-container": "#003333",
+                      "primary": "#006a6a",
+                      "surface-bright": "#f8f9ff",
+                      "inverse-primary": "#5ed8d8",
+                      "inverse-on-surface": "#eaf1ff",
+                      "secondary-fixed": "#dbe4e4",
+                      "on-error": "#ffffff",
+                      "surface": "#f8f9ff",
+                      "on-tertiary-fixed": "#341100",
+                      "on-tertiary": "#ffffff",
+                      "background": "#f8f9ff",
+                      "on-primary": "#ffffff",
+                      "on-background": "#0b1c30",
+                      "on-tertiary-fixed-variant": "#773206",
+                      "tertiary-fixed-dim": "#ffb692",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed-variant": "#404849",
+                      "on-secondary-container": "#5b6465",
+                      "surface-container-low": "#eff4ff",
+                      "surface-dim": "#cbdbf5",
+                      "tertiary-fixed": "#ffdbcb",
+                      "surface-variant": "#d3e4fe",
+                      "on-error-container": "#93000a",
+                      "surface-container-high": "#dce9ff",
+                      "secondary-container": "#d8e1e1",
+                      "on-surface": "#0b1c30",
+                      "outline": "#6d7a79",
+                      "primary-fixed-dim": "#5ed8d8",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-container": "#511e00",
+                      "tertiary": "#95491d",
+                      "surface-container": "#e5eeff",
+                      "on-primary-fixed-variant": "#004f50",
+                      "surface-container-highest": "#d3e4fe"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "16px",
+                      "md": "24px",
+                      "container-margin": "20px",
+                      "sm": "12px",
+                      "xs": "4px",
+                      "lg": "40px",
+                      "xl": "64px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.01em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 1;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+      </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:hidden">
+<!-- TopAppBar equivalent (Custom for prompt specs) -->
+<header class="bg-background flex items-center justify-between px-container-margin h-16 w-full sticky top-0 z-40 bg-opacity-95 backdrop-blur-sm pt-safe-top">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Location</span>
+<div class="flex items-center gap-xs text-primary cursor-pointer active:scale-95 duration-150">
+<span class="font-headline-md text-headline-md">Greenwood Estates</span>
+<span class="material-symbols-outlined text-md">expand_more</span>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150 flex items-center justify-center">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-secondary-container transition-colors active:scale-95 duration-150 flex items-center justify-center relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-1 right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+</div>
+</header>
+<!-- Filter Bar -->
+<div class="w-full px-container-margin py-sm sticky top-16 z-30 bg-background bg-opacity-95 backdrop-blur-sm">
+<div class="flex gap-sm overflow-x-auto hide-scrollbar pb-1">
+<button class="px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap bg-primary-container text-white active:scale-95 duration-150 transition-colors">
+                All
+            </button>
+<button class="px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap bg-secondary-container text-primary hover:bg-surface-container-high active:scale-95 duration-150 transition-colors">
+                Sports
+            </button>
+<button class="px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap bg-secondary-container text-primary hover:bg-surface-container-high active:scale-95 duration-150 transition-colors">
+                Study
+            </button>
+<button class="px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap bg-secondary-container text-primary hover:bg-surface-container-high active:scale-95 duration-150 transition-colors">
+                Hangout
+            </button>
+<button class="px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap bg-secondary-container text-primary hover:bg-surface-container-high active:scale-95 duration-150 transition-colors">
+                Other
+            </button>
+</div>
+</div>
+<!-- Main Feed -->
+<main class="flex-1 px-container-margin pb-24 pt-xs flex flex-col gap-gutter">
+<!-- Card 1 -->
+<article class="bg-surface-container-lowest rounded-xl p-md shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-sm">
+<div class="flex items-start gap-sm">
+<img class="w-12 h-12 rounded-full object-cover shrink-0" data-alt="A close up, high quality, professional portrait photograph of a fit, young man with a friendly smile, looking slightly off-camera. He is outdoors in a bright, modern park setting with soft, natural daylight. He is wearing casual athletic wear. The image has a clean, contemporary aesthetic matching a high-end social networking app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuASCiS_G87_x1kedlAsXeCGYhxgLsCW7EMZ0TnaHczhASl2wb3EGNQrJvRPZkU21wcmPGuIO0Wnbsuk1UWJAbouwEudkOKKWmGu1opI4KRpy8MKUBokPG2b4m9IYuPasyyZibjJcVGkRmc27hakua3aYHTBBsKBSFvMnTJ581pbHci_opDm__Ny4pC67EaFGuyjbJzMip4Cufnwjb64PRjQnDLs30uTkapqrvS4saKMn_mD4oFTzP4r5A"/>
+<div class="flex-1">
+<h3 class="font-headline-md text-[18px] leading-snug text-on-surface mb-xs">Need a football partner</h3>
+<div class="flex flex-wrap gap-x-3 gap-y-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">event</span> Today, 5:00 PM</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">location_on</span> 0.8 km away</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end mt-xs">
+<button class="bg-primary-container text-white px-4 py-2 rounded-lg font-label-md text-label-md active:scale-95 duration-150 transition-colors hover:bg-surface-tint">
+                    Interested
+                </button>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface-container-lowest rounded-xl p-md shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-sm">
+<div class="flex items-start gap-sm">
+<img class="w-12 h-12 rounded-full object-cover shrink-0" data-alt="A candid, high quality, well-lit portrait photograph of a young female college student looking focused but approachable. She is indoors in a modern, bright library setting with soft white overhead lighting. She is wearing a cozy sweater. The overall mood is academic, modern, and clean, fitting a contemporary community app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2W3vFYunZ32WKbfkeV9ImzDP_5OU-0ade5wSaGHZkwPjJA5HYaUEebNphBPEx58j29F-wcO2HhgMQKInGqjE4rGm0yP7cBP1Bwdr-Pdl-k1tIkNXmBVz3noxFY2fBFGHevHejqHSWgO-XJtOr-j1ArPazBCwDNk-_a9oUzCeSJicBnX47pqfrYQoEEPi5sMbf4DWBQm0FVAEUDZRgYVHe6OaVyFeKs0h9_9anPwkYHlkayHj2GdeTow"/>
+<div class="flex-1">
+<h3 class="font-headline-md text-[18px] leading-snug text-on-surface mb-xs">Study buddy for exams</h3>
+<div class="flex flex-wrap gap-x-3 gap-y-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">event</span> Tomorrow, 2:00 PM</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">location_on</span> 1.5 km away</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end mt-xs">
+<button class="bg-primary-container text-white px-4 py-2 rounded-lg font-label-md text-label-md active:scale-95 duration-150 transition-colors hover:bg-surface-tint">
+                    Interested
+                </button>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface-container-lowest rounded-xl p-md shadow-[0px_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-sm">
+<div class="flex items-start gap-sm">
+<img class="w-12 h-12 rounded-full object-cover shrink-0" data-alt="A beautiful, vibrant portrait photograph of a calm, healthy woman in her 30s. She is smiling gently. The background is a lush, sunlit green park in the early morning with soft, warm golden-hour lighting. She is wearing stylish athletic yoga apparel. The aesthetic is wellness-focused, clean, and modern." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCFMUTYkHscoR4ZnCFg02H5I3qybaxYB5sqCaXwNSpxS-51LqqiEOlb6d0mRU9fmzTwgkyBcll7Cqd0kIS_rCGPAdy7QjW0cO1lOXNPfRHrpLR59Ics_Y6N6jpkw2_uTa_JXQeuRi1FTNdEif5bTy8Y1T9wpQ4Imsq0-Qj9J2F0p5lgItPC9exLMEufvT5EgIGbFORMp0cg7c-9oc8GZITXKWKC0GvvnU27X6V_cZXueuGcU8fCcvm5Q"/>
+<div class="flex-1">
+<h3 class="font-headline-md text-[18px] leading-snug text-on-surface mb-xs">Morning Yoga in the Park</h3>
+<div class="flex flex-wrap gap-x-3 gap-y-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">event</span> Sat, 8:00 AM</span>
+<span class="flex items-center gap-xs"><span class="material-symbols-outlined text-[14px]">location_on</span> 0.5 km away</span>
+</div>
+</div>
+</div>
+<div class="flex justify-end mt-xs">
+<button class="bg-primary-container text-white px-4 py-2 rounded-lg font-label-md text-label-md active:scale-95 duration-150 transition-colors hover:bg-surface-tint">
+                    Interested
+                </button>
+</div>
+</article>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-24 right-container-margin w-14 h-14 bg-primary-container text-white rounded-full flex items-center justify-center shadow-[0px_12px_32px_rgba(14,165,165,0.4)] z-40 active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined text-[32px]">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-inverse-surface fixed bottom-0 w-full z-50 rounded-t-xl shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] shadow-md fixed bottom-0 left-0 w-full flex justify-around items-center px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+<button class="flex flex-col items-center justify-center bg-primary-container text-white rounded-full px-4 py-1 active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-weight="fill">home</span>
+<span class="font-label-md text-label-md mt-1">Nearby</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all rounded-full px-4 py-1 active:scale-95 duration-200">
+<span class="material-symbols-outlined">storefront</span>
+<span class="font-label-md text-label-md mt-1">Business</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all rounded-full px-4 py-1 active:scale-95 duration-200">
+<span class="material-symbols-outlined">group</span>
+<span class="font-label-md text-label-md mt-1">Community</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-all rounded-full px-4 py-1 active:scale-95 duration-200">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-md text-label-md mt-1">Profile</span>
+</button>
+</nav>
+</body></html>

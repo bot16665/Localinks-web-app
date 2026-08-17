@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>LocalLink - Business Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#404849",
+                        "on-tertiary-fixed-variant": "#773206",
+                        "on-primary-container": "#003333",
+                        "on-surface-variant": "#3d4949",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb692",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#341100",
+                        "secondary-fixed": "#dbe4e4",
+                        "on-primary": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#cbdbf5",
+                        "tertiary-fixed": "#ffdbcb",
+                        "surface-bright": "#f8f9ff",
+                        "error": "#ba1a1a",
+                        "surface-container": "#e5eeff",
+                        "surface-variant": "#d3e4fe",
+                        "on-primary-fixed": "#002020",
+                        "on-secondary-fixed": "#151d1d",
+                        "surface-container-high": "#dce9ff",
+                        "surface-tint": "#006a6a",
+                        "background": "#f8f9ff",
+                        "outline": "#6d7a79",
+                        "primary": "#006a6a",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-container": "#5b6465",
+                        "inverse-surface": "#213145",
+                        "surface": "#f8f9ff",
+                        "outline-variant": "#bcc9c8",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#eff4ff",
+                        "on-background": "#0b1c30",
+                        "inverse-primary": "#5ed8d8",
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#d3e4fe",
+                        "primary-fixed": "#7df5f5",
+                        "tertiary-container": "#d87d4d",
+                        "inverse-on-surface": "#eaf1ff",
+                        "on-primary-fixed-variant": "#004f50",
+                        "secondary-fixed-dim": "#bfc8c8",
+                        "secondary": "#576060",
+                        "on-tertiary-container": "#511e00",
+                        "tertiary": "#95491d",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed-dim": "#5ed8d8",
+                        "primary-container": "#0ea5a5",
+                        "secondary-container": "#d8e1e1"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "40px",
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "sm": "12px",
+                        "xl": "64px",
+                        "base": "8px",
+                        "md": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .ambient-shadow-card { box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.04); }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col pb-24 relative overflow-x-hidden">
+<!-- Header Section -->
+<header class="w-full bg-surface sticky top-0 z-40 pb-base pt-container-margin px-container-margin shadow-sm">
+<!-- Search Bar -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-sm top-1/2 transform -translate-y-1/2 text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="w-full h-12 bg-surface-container pl-[40px] pr-sm rounded-full font-body-md text-on-surface placeholder-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary focus:bg-surface transition-all border-none" placeholder="Search businesses..." type="text"/>
+</div>
+<!-- Filter Chips (Horizontal Scroll) -->
+<div class="flex overflow-x-auto no-scrollbar gap-sm mt-md pb-xs -mx-container-margin px-container-margin">
+<button class="flex-shrink-0 bg-primary-container text-on-primary-container font-label-md px-4 py-2 rounded-full whitespace-nowrap active:scale-95 transition-transform">All</button>
+<button class="flex-shrink-0 bg-secondary-container text-on-secondary-container font-label-md px-4 py-2 rounded-full whitespace-nowrap active:scale-95 transition-transform">Food</button>
+<button class="flex-shrink-0 bg-secondary-container text-on-secondary-container font-label-md px-4 py-2 rounded-full whitespace-nowrap active:scale-95 transition-transform">Services</button>
+<button class="flex-shrink-0 bg-secondary-container text-on-secondary-container font-label-md px-4 py-2 rounded-full whitespace-nowrap active:scale-95 transition-transform">Retail</button>
+<button class="flex-shrink-0 bg-secondary-container text-on-secondary-container font-label-md px-4 py-2 rounded-full whitespace-nowrap active:scale-95 transition-transform">Wellness</button>
+<button class="flex-shrink-0 bg-secondary-container text-on-secondary-container font-label-md px-4 py-2 rounded-full whitespace-nowrap active:scale-95 transition-transform">More</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow px-container-margin py-gutter flex flex-col gap-gutter max-w-[1200px] mx-auto w-full md:grid md:grid-cols-2 lg:grid-cols-3">
+<!-- Business Card 1 -->
+<article class="bg-surface rounded-xl ambient-shadow-card overflow-hidden flex flex-col active:scale-[0.98] transition-transform cursor-pointer group">
+<div class="relative h-48 w-full bg-surface-variant overflow-hidden">
+<img alt="Greenwood Cafe Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="A warm, inviting storefront of a local neighborhood cafe named Greenwood Cafe. The exterior features soft morning light, wooden signage, lush potted plants flanking the entrance, and large windows revealing a cozy, bustling interior. Contemporary minimalist aesthetic, bright light-mode lighting, teal and warm wood tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbKSSDyVehv-gs2BDkxhdbK7kOBrldEBynZ1iHTyERDvwBt1-G9vXEiW4wqEjR5yixLDE5V8GoPmFOkQY0Y1C0SXFhj4HnJKzGyJRQGTAi9Q6XnoDciRGWRy7Eypcmtd9VenplYwvSMDzvmnyrnxwnuguaeFc9E5q5VYrUeUeJn_CDrQS5g5eu7FKRK0NPONhsgXGPMa6KVFOEgU0KXPrykeVG3KE489tqAoQ_EZBHE8CCcqrKowwZtg"/>
+<div class="absolute top-sm right-sm bg-surface/90 backdrop-blur-sm rounded-full p-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="favorite_border">favorite_border</span>
+</div>
+</div>
+<div class="p-container-margin flex flex-col gap-sm flex-grow">
+<div class="flex justify-between items-start gap-xs">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface line-clamp-1">Greenwood Cafe</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Cafe • 0.4 mi</p>
+</div>
+<span class="inline-flex items-center gap-1 bg-primary-container/20 text-primary font-label-sm text-label-sm px-2 py-1 rounded-full whitespace-nowrap">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                        Open Now
+                    </span>
+</div>
+<div class="mt-auto pt-sm border-t border-outline-variant/30 flex items-start gap-sm">
+<span class="material-symbols-outlined text-primary mt-0.5 text-[20px]" data-icon="local_offer">local_offer</span>
+<p class="font-body-md text-body-md text-on-surface line-clamp-2">Today's Deal: 20% off all seasonal pastries and cold brews.</p>
+</div>
+</div>
+</article>
+<!-- Business Card 2 -->
+<article class="bg-surface rounded-xl ambient-shadow-card overflow-hidden flex flex-col active:scale-[0.98] transition-transform cursor-pointer group">
+<div class="relative h-48 w-full bg-surface-variant overflow-hidden">
+<img alt="The Style Studio Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="A sleek, modern hair salon interior called The Style Studio. The space is illuminated by soft, diffused high-key white light. Features minimalist styling stations, large circular mirrors, plush teal seating, and clean white walls. The mood is calm, professional, and chic, adhering to a contemporary light-mode design system." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCS4i6WWQpECTXz4Sr_Is8oGE0pGZTUvt0G11F6UqlLqxDsVo0Qjx9C3xnYmazoCZ6_ksCBM-wnMhIRQWPpxkcJUg1ND_Yc73KnxKYJU7qVx_iRCVuiK1UF3TrYDwxCAdtps3P9hbDH9Jzvh74JSK9FNS1SxYBNKZcavgdj9uyZ-J_GiZBZkAIjeL3UpRBczISjlJtF5YdoiHQ16OmCDFMROHAI_kvtKw7Cctiqtdg_cLEtN76MsWotpA"/>
+<div class="absolute top-sm right-sm bg-surface/90 backdrop-blur-sm rounded-full p-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="favorite_border">favorite_border</span>
+</div>
+</div>
+<div class="p-container-margin flex flex-col gap-sm flex-grow">
+<div class="flex justify-between items-start gap-xs">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface line-clamp-1">The Style Studio</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Hair Salon • 1.2 mi</p>
+</div>
+<span class="inline-flex items-center gap-1 bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-2 py-1 rounded-full whitespace-nowrap">
+                        Closed
+                    </span>
+</div>
+<div class="mt-auto pt-sm border-t border-outline-variant/30 flex items-start gap-sm">
+<span class="material-symbols-outlined text-primary mt-0.5 text-[20px]" data-icon="auto_awesome">auto_awesome</span>
+<p class="font-body-md text-body-md text-on-surface line-clamp-2">New Season Collection: Book a consultation for fall color trends.</p>
+</div>
+</div>
+</article>
+<!-- Business Card 3 -->
+<article class="bg-surface rounded-xl ambient-shadow-card overflow-hidden flex flex-col active:scale-[0.98] transition-transform cursor-pointer group">
+<div class="relative h-48 w-full bg-surface-variant overflow-hidden">
+<img alt="Zenith Wellness Cover" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="A bright, airy yoga studio called Zenith Wellness. Sunlight streams through large windows onto polished light wood floors. Rolled teal yoga mats are neatly arranged. The setting is minimalist and serene, utilizing ample whitespace and soft lighting to create an approachable, community-focused, modern light-mode atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTTGHTFAP2UxZUdkDeFRceWtewWSNT_DsBvtWlMK1A3YoBUvxaElYwIpVDiaAfOxhZ_3M39L9W0uCgfVECqk-V5X2KLx3ypQok0mToqeX497QXDY9QrhxLjn4_Otc8-0tU1u2qKXlb_0sa7P7EHTi75yVtFewSYKUcCI_KuTz6-cf41RusaLnaiQLfujje0cfFlRvTsDvn7uE3hmYJZiWfTHVP4MA6RYHMuiqSw42FM4klHZQ3GOn1CA"/>
+<div class="absolute top-sm right-sm bg-surface/90 backdrop-blur-sm rounded-full p-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="favorite_border">favorite_border</span>
+</div>
+</div>
+<div class="p-container-margin flex flex-col gap-sm flex-grow">
+<div class="flex justify-between items-start gap-xs">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface line-clamp-1">Zenith Wellness</h2>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-xs">Yoga Studio • 0.8 mi</p>
+</div>
+<span class="inline-flex items-center gap-1 bg-primary-container/20 text-primary font-label-sm text-label-sm px-2 py-1 rounded-full whitespace-nowrap">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                        Open Now
+                    </span>
+</div>
+</div>
+</article>
+</main>
+<!-- Bottom Navigation Bar (Shared Component) -->
+<!-- Destination Rule: Rendered as this is a top-level destination (Business Feed) -->
+<nav class="bg-surface fixed bottom-0 left-0 w-full z-50 flex justify-around items-center py-2 px-4 shadow-lg rounded-t-xl shadow-[0px_-4px_20px_rgba(0,0,0,0.04)] md:hidden">
+<!-- Home (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-secondary-container transition-colors rounded-full active:scale-90 duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="home">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</button>
+<!-- Business (Active - Exact Match) -->
+<button aria-current="page" class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 hover:bg-secondary-container transition-colors active:scale-90 duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="storefront" data-weight="fill" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span class="font-label-sm text-label-sm font-bold">Business</span>
+</button>
+<!-- Community (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-secondary-container transition-colors rounded-full active:scale-90 duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="groups">groups</span>
+<span class="font-label-sm text-label-sm">Community</span>
+</button>
+<!-- Profile (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-4 py-1 hover:bg-secondary-container transition-colors rounded-full active:scale-90 duration-200">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</button>
+</nav>
+<script>
+        // Simple micro-interaction for filter chips
+        document.addEventListener('DOMContentLoaded', () => {
+            const chips = document.querySelectorAll('header .overflow-x-auto button');
+            chips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    // Reset all
+                    chips.forEach(c => {
+                        c.classList.remove('bg-primary-container', 'text-on-primary-container');
+                        c.classList.add('bg-secondary-container', 'text-on-secondary-container');
+                    });
+                    // Set active
+                    chip.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+                    chip.classList.add('bg-primary-container', 'text-on-primary-container');
+                    
+                    // Center chip in scroll view on click (horizontal smooth scroll)
+                    chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                });
+            });
+        });
+    </script>
+</body></html>
