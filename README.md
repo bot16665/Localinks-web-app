@@ -92,6 +92,10 @@ Core tables:
 | `npm run start` | Start production server       |
 | `npm run lint`  | Run ESLint                    |
 
+## Design Reference
+
+A `design-reference/` folder in this repo contains the source design files. If you want to make UI changes, check there first for the intended look and feel — feel free to update it and have fun with it! 🎨
+
 ## Contributing
 
 1. Fork the repo
