@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LocalLink
+
+> Your neighborhood, connected.
+
+LocalLink is a community app that connects neighbors with local shops, activities, and each other — built with the Next.js App Router, Supabase, and Tailwind CSS.
+
+## Features
+
+- 🔐 Google OAuth sign-in via Supabase Auth
+- 🏪 Local business listings — create, browse, and edit your own business
+- 🏃 Neighborhood activities feed
+- 💬 Neighbor chat / community connection
+- 🎨 Custom design-token theme (dark palette) built on Tailwind CSS v4
+- 📱 Fully responsive, mobile-first UI
+
+## Tech Stack
+
+| Layer      | Tech                                  |
+|------------|----------------------------------------|
+| Framework  | [Next.js](https://nextjs.org) (App Router) |
+| Styling    | [Tailwind CSS v4](https://tailwindcss.com) with custom `@theme` design tokens |
+| Backend    | [Supabase](https://supabase.com) (Auth, Postgres, RLS) |
+| Language   | TypeScript |
+| Fonts      | Inter (self-hosted via `next/font`), Material Symbols |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- A [Supabase](https://supabase.com) project
+
+### Installation
+
+```bash
+git clone https://github.com/<your-username>/locallink.git
+cd locallink
+npm install
+```
+
+### Environment Variables
+
+Create a `.env.local` file in the project root:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+### Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── layout.tsx              # Root layout, fonts, metadata
+├── globals.css             # Tailwind + design tokens (@theme)
+├── page.tsx                # Login page
+├── auth/
+│   └── callback/            # Supabase OAuth callback
+├── business/
+│   ├── new/page.tsx         # Create business
+│   └── [id]/edit/page.tsx   # Edit business
+├── activities/
+│   └── new/page.tsx         # Create activity
+lib/
+└── supabase.ts              # Supabase client (createClient)
+```
 
-## Learn More
+## Database Schema (Supabase)
 
-To learn more about Next.js, take a look at the following resources:
+Core tables:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **profiles** — user profile data, including location
+- **businesses** — `owner_id`, `name`, `category`, `description`, `open_time`, `close_time`, `address`, `location`, `is_open`
+- **activities** — neighborhood activities/events
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+> Row Level Security (RLS) is enabled on all tables. Make sure `SELECT`/`INSERT`/`UPDATE` policies exist for the relevant owner-scoped operations before testing forms locally.
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Command         | Description                  |
+|-----------------|-------------------------------|
+| `npm run dev`   | Start local dev server        |
+| `npm run build` | Production build              |
+| `npm run start` | Start production server       |
+| `npm run lint`  | Run ESLint                    |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes
+4. Open a pull request
