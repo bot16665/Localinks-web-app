@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
+import { getPublicStoragePath } from '@/lib/storage-path'
 
 const supabase = createClient()
 
@@ -96,8 +97,10 @@ export default function CommunityPostDetailPage() {
 
       const { data: postData, error: postError } = await supabase
         .from('posts')
-        .select('*, profiles(name, profile_photo_url)')
+        .select('id, user_id, type, category, title, description, photo_url, society_id, status, created_at')
         .eq('id', postId)
+        .eq('type', 'local')
+        .eq('society_id', societyId)
         .single()
 
       if (postError || !postData) {
@@ -106,10 +109,13 @@ export default function CommunityPostDetailPage() {
         return
       }
 
+      const { data: profileData } = await supabase
+        .from('public_profiles')
+        .select('name, profile_photo_url')
+        .eq('id', postData.user_id)
+        .maybeSingle()
+
       const postWithProfile = postData
-      const profileData = Array.isArray(postWithProfile.profiles)
-        ? postWithProfile.profiles[0]
-        : postWithProfile.profiles
 
       const mappedPost: Post = {
         id: postWithProfile.id,
@@ -130,13 +136,19 @@ export default function CommunityPostDetailPage() {
 
       const { data: repliesData } = await supabase
         .from('replies')
-        .select('id, post_id, user_id, content, created_at, profiles(name, profile_photo_url)')
+        .select('id, post_id, user_id, content, created_at')
         .eq('post_id', postId)
         .order('created_at', { ascending: true })
 
       if (repliesData) {
+        const authorIds = [...new Set(repliesData.map((row) => row.user_id))]
+        const { data: authorProfiles } = await supabase
+          .from('public_profiles')
+          .select('id, name, profile_photo_url')
+          .in('id', authorIds)
+        const authorById = new Map((authorProfiles ?? []).map((profile) => [profile.id, profile]))
         const mappedReplies: Reply[] = repliesData.map((row) => {
-          const replyProfile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+          const replyProfile = authorById.get(row.user_id)
           return {
             id: row.id,
             post_id: row.post_id,
@@ -171,7 +183,7 @@ export default function CommunityPostDetailPage() {
         },
         async (payload) => {
           const { data: authorProfile } = await supabase
-            .from('profiles')
+            .from('public_profiles')
             .select('name, profile_photo_url')
             .eq('id', payload.new.user_id)
             .single()
@@ -233,14 +245,25 @@ export default function CommunityPostDetailPage() {
 
     try {
       const supabase = createClient()
-      const { error: deleteError } = await supabase
+      const { data: deletedPost, error: deleteError } = await supabase
         .from('posts')
         .delete()
         .eq('id', postId)
+        .select('id')
+        .maybeSingle()
 
       if (deleteError) throw deleteError
+      if (!deletedPost) throw new Error('Post could not be deleted.')
 
-      router.push('/community')
+      const photoPath = getPublicStoragePath(post?.photo_url ?? null, 'community-images')
+      if (photoPath) {
+        const { error: storageError } = await supabase.storage
+          .from('community-images')
+          .remove([photoPath])
+        if (storageError) console.error('Post deleted, but its image could not be removed:', storageError)
+      }
+
+      router.push('/?tab=community')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete post')
     }
@@ -261,7 +284,7 @@ export default function CommunityPostDetailPage() {
           <p className="text-on-surface-variant">{error || 'Post not found'}</p>
           <button
             type="button"
-            onClick={() => router.push('/community')}
+            onClick={() => router.push('/?tab=community')}
             className="mt-4 text-sm font-semibold text-primary"
           >
             Back to Community
@@ -279,7 +302,7 @@ export default function CommunityPostDetailPage() {
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-md px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between border-b border-outline-variant/30">
         <div className="flex items-center justify-between max-w-2xl mx-auto w-full">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/?tab=community')}
             className="w-10 h-10 -ml-2 text-on-surface hover:bg-surface-container rounded-full transition-colors active:scale-95 flex items-center justify-center touch-target"
             aria-label="Back"
           >
@@ -303,7 +326,7 @@ export default function CommunityPostDetailPage() {
 
       {/* Main Content */}
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-28 flex flex-col gap-6">
-        <article className="bg-surface-container-low rounded-2xl p-4 sm:p-6 border border-outline-variant/30 space-y-4">
+        <article className="bg-surface-container-lowest rounded-2xl p-4 sm:p-6 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-4">
           <div className="flex justify-between items-center gap-2">
             <span className={`px-2.5 py-0.5 font-medium text-xs rounded-full ${
               post.category === 'Help Request' 

@@ -90,7 +90,7 @@ export default function ChatPage() {
       const otherUserId = chatData.user_one_id === user.id ? chatData.user_two_id : chatData.user_one_id
 
       const { data: profileData } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('name, profile_photo_url')
         .eq('id', otherUserId)
         .single()
@@ -251,14 +251,13 @@ export default function ChatPage() {
                   {getInitials(otherUser.name)}
                 </div>
               )}
-              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></div>
             </div>
 
             <div className="flex flex-col">
               <h1 className="font-semibold text-sm sm:text-base leading-tight text-on-surface truncate">
                 {otherUser.name}
               </h1>
-              <span className="text-xs text-primary font-medium">Online</span>
+              <span className="text-xs text-on-surface-variant">Conversation</span>
             </div>
           </div>
         </div>

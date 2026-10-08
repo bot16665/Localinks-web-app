@@ -84,7 +84,7 @@ export default function PostPromoPage() {
 
       if (insertError) throw insertError
 
-      router.push(`/business/${businessId}`)
+      router.push('/?tab=business')
     } catch (err) {
       setState((prev) => ({
         ...prev,

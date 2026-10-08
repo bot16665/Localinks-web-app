@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { validateImageFile } from '@/lib/image-validation'
+import { getPublicStoragePath } from '@/lib/storage-path'
 
 type Business = {
   id: string
@@ -15,6 +17,7 @@ type Business = {
   close_time: string | null
   address: string | null
   is_open: boolean
+  photo_url: string | null
 }
 
 type PromoPost = {
@@ -115,13 +118,19 @@ export default function BusinessDetailPage() {
   const fetchReviews = async (supabase: ReturnType<typeof createClient>) => {
     const { data: reviewsData } = await supabase
       .from('business_reviews')
-      .select('id, user_id, rating, comment, created_at, profiles(name, profile_photo_url)')
+      .select('id, user_id, rating, comment, created_at')
       .eq('business_id', businessId)
       .order('created_at', { ascending: false })
 
     if (reviewsData) {
-      const mapped = reviewsData.map((row: any) => {
-        const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+      const reviewerIds = [...new Set(reviewsData.map((row) => row.user_id))]
+      const { data: reviewerProfiles } = await supabase
+        .from('public_profiles')
+        .select('id, name, profile_photo_url')
+        .in('id', reviewerIds)
+      const reviewerById = new Map((reviewerProfiles ?? []).map((profile) => [profile.id, profile]))
+      const mapped = reviewsData.map((row) => {
+        const profile = reviewerById.get(row.user_id)
         return {
           id: row.id,
           user_id: row.user_id,
@@ -166,7 +175,7 @@ export default function BusinessDetailPage() {
       setCurrentUserId(user.id)
 
       const { data: businessData, error: businessError } = await supabase
-        .from('businesses')
+        .from('public_businesses')
         .select('*')
         .eq('id', businessId)
         .single()
@@ -205,6 +214,13 @@ export default function BusinessDetailPage() {
   const handleAddPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file || !businessId) return
+
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setError(validationError)
+      e.currentTarget.value = ''
+      return
+    }
 
     setUploading(true)
 
@@ -247,6 +263,13 @@ export default function BusinessDetailPage() {
 
     try {
       const supabase = createClient()
+      const filePath = getPublicStoragePath(photo.photo_url, 'business-images')
+      if (filePath) {
+        const { error: storageError } = await supabase.storage
+          .from('business-images')
+          .remove([filePath])
+        if (storageError) throw storageError
+      }
 
       const { error: dbError } = await supabase
         .from('business_photos')
@@ -254,17 +277,6 @@ export default function BusinessDetailPage() {
         .eq('id', photo.id)
 
       if (dbError) throw dbError
-
-      const urlParts = photo.photo_url.split('/business-images/')
-      const filePath = urlParts[1] || null
-
-      if (filePath) {
-        const { error: storageError } = await supabase.storage
-          .from('business-images')
-          .remove([filePath])
-
-        if (storageError) throw storageError
-      }
 
       setPhotos((prev) => prev.filter((p) => p.id !== photo.id))
     } catch (err) {
@@ -347,7 +359,7 @@ export default function BusinessDetailPage() {
   }
 
   const isOwner = currentUserId === business.owner_id
-  const coverPhoto = photos.length > 0 ? photos[0].photo_url : null
+  const coverPhoto = business.photo_url || photos[0]?.photo_url || null
 
   return (
     <div className="bg-background text-on-surface antialiased min-h-screen flex flex-col items-center">
@@ -392,7 +404,7 @@ export default function BusinessDetailPage() {
       <main className="px-4 sm:px-6 -mt-8 relative z-10 w-full max-w-2xl space-y-4 sm:space-y-6 pb-24">
         
         {/* Header Section */}
-        <section className="bg-surface-container-low p-4 sm:p-6 rounded-2xl shadow-xl border border-outline-variant/30 space-y-3">
+        <section className="bg-surface-container-lowest p-4 sm:p-6 rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-outline-variant/20 space-y-3">
           <div className="flex justify-between items-start gap-2">
             <div>
               <h1 className="font-bold text-2xl sm:text-3xl text-on-surface leading-tight">{business.name}</h1>

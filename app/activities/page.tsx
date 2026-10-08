@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getPublicStoragePath } from '@/lib/storage-path'
 
 type Category = 'Sports' | 'Study' | 'Hangout' | 'Market' | 'Events' | 'Fitness' | 'Other'
 
@@ -27,9 +28,10 @@ interface Post {
 
 interface ActivitiesPageProps {
   embedded?: boolean
+  radiusKm?: number
 }
 
-export default function ActivitiesPage({ embedded = false }: ActivitiesPageProps) {
+export default function ActivitiesPage({ embedded = false, radiusKm = 5 }: ActivitiesPageProps) {
   const router = useRouter()
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,58 +40,23 @@ export default function ActivitiesPage({ embedded = false }: ActivitiesPageProps
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [interestedPostIds, setInterestedPostIds] = useState<Set<string>>(new Set())
   const [loadingPostId, setLoadingPostId] = useState<string | null>(null)
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
+  const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
 
   const fetchNearbyPosts = async () => {
     setLoading(true)
     setError(null)
 
     const supabase = createClient()
-    try {
-      const { data, error: rpcError } = await supabase.rpc('nearby_posts', {
-        radius_km: 10,
-        post_type: 'individual',
-      })
+    const { data, error: rpcError } = await supabase.rpc('nearby_posts', {
+      radius_km: radiusKm,
+      post_type: 'individual',
+    })
 
-      if (!rpcError && data && data.length > 0) {
-        setPosts(data as Post[])
-        setLoading(false)
-        return
-      }
-    } catch {
-      // Fall through to direct query
-    }
-
-    // Direct query fallback
-    const { data: directPosts, error: directError } = await supabase
-      .from('posts')
-      .select('*, profiles(name, profile_photo_url)')
-      .eq('type', 'individual')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-
-    if (directError) {
-      setError('Failed to load activities')
-    } else if (directPosts) {
-      const mapped = directPosts.map((p: any) => {
-        const prof = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
-        return {
-          id: p.id,
-          user_id: p.user_id,
-          type: p.type,
-          category: p.category,
-          title: p.title,
-          description: p.description,
-          photo_url: p.photo_url,
-          event_date: p.event_date,
-          event_time: p.event_time,
-          status: p.status,
-          created_at: p.created_at,
-          distance_km: 0.5,
-          author_name: prof?.name || 'Neighbor',
-          author_photo_url: prof?.profile_photo_url || null,
-        } as Post
-      })
-      setPosts(mapped)
+    if (rpcError) {
+      setError('Failed to load nearby activities')
+    } else {
+      setPosts((data ?? []) as Post[])
     }
 
     setLoading(false)
@@ -113,7 +80,7 @@ export default function ActivitiesPage({ embedded = false }: ActivitiesPageProps
     }
 
     load()
-  }, [router])
+  }, [router, radiusKm])
 
   const filteredPosts = useMemo(() => {
     if (selectedCategory === 'All') return posts
@@ -181,6 +148,50 @@ export default function ActivitiesPage({ embedded = false }: ActivitiesPageProps
     }
   }
 
+  const handleDeletePost = async (post: Post) => {
+    if (!currentUserId || deletingPostId) return
+    if (!window.confirm(`Delete "${post.title}"? This action cannot be undone.`)) return
+
+    setDeletingPostId(post.id)
+    setDeleteMessage(null)
+
+    try {
+      const supabase = createClient()
+      const { data: postToDelete, error: fetchError } = await supabase
+        .from('posts')
+        .select('photo_url')
+        .eq('id', post.id)
+        .eq('user_id', currentUserId)
+        .maybeSingle()
+
+      if (fetchError) throw fetchError
+      if (!postToDelete) throw new Error('You can only delete your own activity.')
+
+      const { data: deletedPost, error: deleteError } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id)
+        .eq('user_id', currentUserId)
+        .select('id')
+        .maybeSingle()
+
+      if (deleteError) throw deleteError
+      if (!deletedPost) throw new Error('Activity could not be deleted.')
+
+      setPosts((currentPosts) => currentPosts.filter((item) => item.id !== post.id))
+
+      const photoPath = getPublicStoragePath(postToDelete.photo_url, 'community-images')
+      if (photoPath) {
+        const { error: storageError } = await supabase.storage.from('community-images').remove([photoPath])
+        if (storageError) setDeleteMessage('Activity deleted, but its image could not be removed.')
+      }
+    } catch (err) {
+      setDeleteMessage(err instanceof Error ? err.message : 'Failed to delete activity.')
+    } finally {
+      setDeletingPostId(null)
+    }
+  }
+
   const mainContent = (
     <div className="w-full flex flex-col">
       {/* Category Filter Bar */}
@@ -220,6 +231,11 @@ export default function ActivitiesPage({ embedded = false }: ActivitiesPageProps
             {error}
           </div>
         )}
+        {deleteMessage && (
+          <div role="status" className="sm:col-span-full rounded-2xl border border-error/30 bg-error-container/20 p-4 text-center font-medium text-error text-sm">
+            {deleteMessage}
+          </div>
+        )}
 
         {!error && loading && (
           <>
@@ -247,7 +263,7 @@ export default function ActivitiesPage({ embedded = false }: ActivitiesPageProps
             return (
               <article
                 key={post.id}
-                className="bg-surface-container-low rounded-2xl p-4 sm:p-5 border border-outline-variant/30 flex flex-col justify-between gap-3 hover:border-primary/40 hover:shadow-lg transition-all duration-200 group"
+                className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col justify-between gap-3 hover:border-primary/40 hover:shadow-lg transition-all duration-200 group"
               >
                 <Link href={`/activities/${post.id}`} className="flex items-start gap-3 group/link">
                   {post.author_photo_url ? (
@@ -295,9 +311,25 @@ export default function ActivitiesPage({ embedded = false }: ActivitiesPageProps
                   </span>
 
                   {isOwnPost ? (
-                    <span className="text-xs text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-full font-medium">
-                      Your post
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-full font-medium">
+                        Your post
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePost(post)}
+                        disabled={deletingPostId !== null}
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-error-container hover:text-error disabled:opacity-50"
+                        aria-label={`Delete ${post.title}`}
+                        title="Delete activity"
+                      >
+                        {deletingPostId === post.id ? (
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <span className="material-symbols-outlined text-lg">delete</span>
+                        )}
+                      </button>
+                    </div>
                   ) : (
                     <button
                       type="button"

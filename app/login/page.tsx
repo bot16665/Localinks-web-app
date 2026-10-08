@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase'
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 const FEATURE_PILLS = [
   { icon: 'groups', label: 'Community' },
@@ -28,12 +29,6 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-on-surface flex items-center justify-center px-4 sm:px-6 py-8 antialiased selection:bg-primary-container selection:text-on-primary-container">
 
-      {/* Animated Background Gradients */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -right-40 w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-primary/15 blur-3xl animate-pulse delay-1000" />
-      </div>
-
       {/* Main Content Container */}
       <div className="relative z-10 w-full max-w-md flex flex-col items-center gap-6 sm:gap-8 py-4 sm:py-6">
 
@@ -42,15 +37,13 @@ export default function LoginPage() {
 
           {/* Logo with Glow Effect */}
           <div className="group relative flex items-center justify-center">
-            <div className="absolute inset-0 rounded-3xl bg-primary/30 blur-2xl transition-all duration-500 opacity-60 group-hover:opacity-100" />
-
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center shadow-2xl ring-2 ring-primary/40 transition-transform duration-300 group-hover:scale-105">
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-surface-container-lowest flex items-center justify-center shadow-[0_12px_32px_rgba(14,165,165,0.1)] ring-1 ring-primary/15 transition-transform duration-300 group-hover:scale-[1.03]">
               <Image
                 src="/logo.png"
                 alt="LocalLink"
-                width={80}
-                height={80}
-                className="object-contain rounded-2xl"
+                width={112}
+                height={112}
+                className="object-contain rounded-full p-2"
                 priority
               />
             </div>
@@ -84,7 +77,7 @@ export default function LoginPage() {
         </div>
 
         {/* Sign-in Card */}
-        <div className="w-full rounded-3xl border border-outline-variant/30 bg-surface-container-low shadow-2xl p-6 sm:p-8">
+        <div className="w-full rounded-2xl border border-outline-variant/20 bg-surface-container-lowest shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-6 sm:p-8">
 
           <div className="flex flex-col gap-5 sm:gap-6">
 
@@ -107,7 +100,7 @@ export default function LoginPage() {
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="group relative flex w-full h-12 items-center justify-center gap-3 overflow-hidden rounded-2xl bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 px-5 sm:px-6 shadow-md transition-all duration-200 hover:border-primary/50 hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 touch-target"
+              className="group relative flex w-full h-12 items-center justify-center gap-3 overflow-hidden rounded-xl bg-white hover:bg-surface-container-low border border-outline-variant/40 px-5 sm:px-6 shadow-sm transition-all duration-200 hover:border-primary/50 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 touch-target"
             >
               {loading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -140,6 +133,14 @@ export default function LoginPage() {
                 {loading ? 'Signing in...' : 'Continue with Google'}
               </span>
             </button>
+
+            <Link
+              href="/login/phone"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-on-primary font-semibold text-sm transition-colors hover:bg-primary/90"
+            >
+              <span className="material-symbols-outlined">sms</span>
+              Continue with phone
+            </Link>
 
             {/* Divider */}
             <div className="flex items-center gap-3">

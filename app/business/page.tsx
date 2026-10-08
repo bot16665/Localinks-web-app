@@ -14,15 +14,17 @@ interface Business {
   name: string
   category: Category
   address: string | null
+  photo_url: string | null
   is_open: boolean
   distance_km: number
 }
 
 interface BusinessFeedPageProps {
   embedded?: boolean
+  radiusKm?: number
 }
 
-export default function BusinessFeedPage({ embedded = false }: BusinessFeedPageProps) {
+export default function BusinessFeedPage({ embedded = false, radiusKm = 5 }: BusinessFeedPageProps) {
   const router = useRouter()
   const [businesses, setBusinesses] = useState<Business[]>([])
   const [loading, setLoading] = useState(true)
@@ -35,40 +37,15 @@ export default function BusinessFeedPage({ embedded = false }: BusinessFeedPageP
     setError(null)
 
     const supabase = createClient()
-    try {
-      const { data, error: rpcError } = await supabase.rpc('nearby_businesses', {
-        radius_km: 10,
-        filter_category: category === 'All' ? null : category,
-      })
+    const { data, error: rpcError } = await supabase.rpc('nearby_businesses', {
+      radius_km: radiusKm,
+      filter_category: category === 'All' ? null : category,
+    })
 
-      if (!rpcError && data && data.length > 0) {
-        setBusinesses((data ?? []) as Business[])
-        setLoading(false)
-        return
-      }
-    } catch {
-      // Fall through to direct query
-    }
-
-    // Direct query fallback
-    let query = supabase.from('businesses').select('*').order('created_at', { ascending: false })
-    if (category !== 'All') {
-      query = query.eq('category', category)
-    }
-    const { data: directBusinesses, error: directError } = await query
-
-    if (directError) {
-      setError('Failed to load businesses')
-    } else if (directBusinesses) {
-      const mapped = directBusinesses.map((b: any) => ({
-        id: b.id,
-        name: b.name,
-        category: b.category,
-        address: b.address,
-        is_open: b.is_open ?? true,
-        distance_km: 0.8,
-      }))
-      setBusinesses(mapped as Business[])
+    if (rpcError) {
+      setError('Failed to load nearby businesses')
+    } else {
+      setBusinesses((data ?? []) as Business[])
     }
 
     setLoading(false)
@@ -91,7 +68,7 @@ export default function BusinessFeedPage({ embedded = false }: BusinessFeedPageP
     }
 
     load()
-  }, [router, selectedCategory])
+  }, [router, selectedCategory, radiusKm])
 
   const filteredBusinesses = useMemo(() => {
     let result = businesses
@@ -171,13 +148,21 @@ export default function BusinessFeedPage({ embedded = false }: BusinessFeedPageP
             <Link
               href={`/business/${business.id}`}
               key={business.id}
-              className="bg-surface-container-low rounded-2xl overflow-hidden flex flex-col hover:border-primary/40 border border-outline-variant/30 hover:shadow-lg active:scale-[0.98] transition-all duration-200 group"
+              className="bg-surface-container-lowest rounded-2xl overflow-hidden flex flex-col hover:border-primary/40 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-lg active:scale-[0.98] transition-all duration-200 group"
             >
               {/* Cover Banner */}
               <div className="relative w-full h-36 sm:h-40 bg-gradient-to-br from-surface-container to-surface-container-high overflow-hidden flex items-center justify-center">
-                <span className="material-symbols-outlined text-5xl text-primary/30 group-hover:scale-110 transition-transform duration-300">
-                  storefront
-                </span>
+                {business.photo_url ? (
+                  <img
+                    src={business.photo_url}
+                    alt={`${business.name} cover`}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                ) : (
+                  <span className="material-symbols-outlined text-5xl text-primary/30 group-hover:scale-110 transition-transform duration-300">
+                    storefront
+                  </span>
+                )}
                 <span className={`absolute top-3 right-3 inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${
                   business.is_open 
                     ? 'bg-primary text-on-primary shadow-sm' 

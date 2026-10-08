@@ -8,37 +8,51 @@ import ProfileTab from '@/components/ProfileTab'
 import LocationModal from '@/components/LocationModal'
 import NotificationDrawer from '@/components/NotificationDrawer'
 import { createClient } from '@/lib/supabase'
+import { useRouter } from 'next/navigation'
 
 type Profile = {
   id?: string
   name: string
   profile_photo_url: string
   society_id?: string
-  location?: any
 }
 
-type TabKey = 'nearby' | 'business' | 'community' | 'profile'
+type TabKey = 'nearby' | 'business' | 'community' | 'chat' | 'profile'
 
 interface HomeShellProps {
   profile: Profile
+  initialTab?: TabKey
   initialSocietyName?: string
+  initialDiscoveryRadius?: number
+  initialNotificationsEnabled?: boolean
 }
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'nearby', label: 'Nearby', icon: 'home' },
-  { key: 'business', label: 'Business', icon: 'group' },
-  { key: 'community', label: 'Community', icon: 'distance' },
+  { key: 'business', label: 'Business', icon: 'storefront' },
+  { key: 'community', label: 'Community', icon: 'groups' },
+  { key: 'chat', label: 'Chat', icon: 'chat_bubble' },
   { key: 'profile', label: 'Profile', icon: 'person' },
 ]
 
-export default function HomeShell({ profile, initialSocietyName }: HomeShellProps) {
-  const [activeTab, setActiveTab] = useState<TabKey>('nearby')
+export default function HomeShell({
+  profile,
+  initialTab = 'nearby',
+  initialSocietyName,
+  initialDiscoveryRadius = 5,
+  initialNotificationsEnabled = true,
+}: HomeShellProps) {
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState<TabKey>(initialTab)
+  const [activeSocietyId, setActiveSocietyId] = useState<string | null>(profile.society_id ?? null)
   const [locationName, setLocationName] = useState<string>(initialSocietyName || 'Detecting Area...')
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [showNotificationDrawer, setShowNotificationDrawer] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [feedRefreshKey, setFeedRefreshKey] = useState(0)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [discoveryRadius, setDiscoveryRadius] = useState(initialDiscoveryRadius)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(initialNotificationsEnabled)
 
   // Fetch initial society name if not provided
   useEffect(() => {
@@ -71,9 +85,8 @@ export default function HomeShell({ profile, initialSocietyName }: HomeShellProp
           .limit(1)
           .maybeSingle()
 
-        const soc = Array.isArray((member as any)?.societies)
-          ? (member as any)?.societies[0]
-          : (member as any)?.societies
+        const societies = member?.societies
+        const soc = Array.isArray(societies) ? societies[0] : societies
 
         if (soc?.name) {
           setLocationName(soc.name)
@@ -87,53 +100,60 @@ export default function HomeShell({ profile, initialSocietyName }: HomeShellProp
     fetchCurrentSociety()
   }, [profile, initialSocietyName])
 
-  // Real-time live toast alerts for new posts & businesses
-  useEffect(() => {
+  const handleDiscoveryRadiusChange = async (radius: number) => {
+    const previousRadius = discoveryRadius
+    setDiscoveryRadius(radius)
+    if (!profile.id) return
+
     const supabase = createClient()
+    const { error } = await supabase
+      .from('profiles')
+      .update({ discovery_radius_km: radius })
+      .eq('id', profile.id)
 
-    const channel = supabase
-      .channel('live-app-toasts')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'posts' },
-        (payload: any) => {
-          const post = payload.new
-          const msg = post.type === 'individual'
-            ? `🏃 New Activity: "${post.title}"`
-            : `💬 New Community Query: "${post.title}"`
-          setToastMessage(msg)
-          setTimeout(() => setToastMessage(null), 5000)
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'businesses' },
-        (payload: any) => {
-          const biz = payload.new
-          setToastMessage(`🏪 New Business Added: "${biz.name}"`)
-          setTimeout(() => setToastMessage(null), 5000)
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
+    if (error) {
+      setDiscoveryRadius(previousRadius)
+      setToastMessage('Could not save discovery radius')
+      setTimeout(() => setToastMessage(null), 4000)
     }
-  }, [])
+  }
+
+  const handleNotificationsEnabledChange = async (enabled: boolean) => {
+    const previousValue = notificationsEnabled
+    setNotificationsEnabled(enabled)
+    if (!profile.id) return
+
+    const supabase = createClient()
+    const { error } = await supabase
+      .from('profiles')
+      .update({ in_app_notifications_enabled: enabled })
+      .eq('id', profile.id)
+
+    if (error) {
+      setNotificationsEnabled(previousValue)
+      setToastMessage('Could not save notification preference')
+      setTimeout(() => setToastMessage(null), 4000)
+    }
+  }
 
   const handleTabClick = (tabKey: TabKey) => {
+    if (tabKey === 'chat') {
+      router.push('/chat')
+      return
+    }
     setActiveTab(tabKey)
   }
 
-  const handleLocationUpdated = (newName: string) => {
+  const handleLocationUpdated = (newName: string, _latitude: number, _longitude: number, societyId?: string) => {
     setLocationName(newName)
+    if (societyId) setActiveSocietyId(societyId)
     setFeedRefreshKey((prev) => prev + 1)
     setToastMessage(`📍 Location updated to ${newName}`)
     setTimeout(() => setToastMessage(null), 4000)
   }
 
   return (
-    <div className="bg-background text-on-surface antialiased font-sans selection:bg-primary-container selection:text-on-primary-container min-h-screen pb-24 sm:pb-28 md:pb-0 flex flex-col">
+    <div className="bg-background text-on-surface antialiased font-sans selection:bg-primary-container selection:text-on-primary-container min-h-screen pb-24 sm:pb-28 lg:pb-0 flex flex-col">
       
       {/* Live Toast Notification Banner */}
       {toastMessage && (
@@ -152,30 +172,33 @@ export default function HomeShell({ profile, initialSocietyName }: HomeShellProp
       )}
 
       {/* TopAppBar */}
-      <header className="bg-background/95 w-full sticky top-0 z-40 backdrop-blur-md border-b border-outline-variant/30 shadow-sm transition-colors duration-200">
-        <div className="flex items-center justify-between gap-2 px-4 sm:px-6 lg:px-8 h-14 sm:h-16 w-full">
+      <header className="bg-white/95 w-full sticky top-0 z-40 backdrop-blur-md border-b border-outline-variant/30 shadow-sm transition-colors duration-200">
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-6 lg:px-8 h-16 w-full">
           
           {/* Interactive Location Dropdown Button */}
           <button
             type="button"
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center gap-1.5 sm:gap-2 text-primary hover:bg-surface-container-low px-2.5 sm:px-3 py-1.5 rounded-full transition-all active:scale-95 group min-w-0 border border-primary/20 hover:border-primary/40"
+            className="flex items-center gap-2 text-primary hover:bg-surface-container-low px-2 py-1 rounded-xl transition-all active:scale-95 group min-w-0"
             aria-label="Change location"
             title="Click to detect or change your location"
           >
-            <span className="material-symbols-outlined icon-fill text-lg sm:text-xl shrink-0 group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined icon-fill text-xl sm:text-2xl shrink-0 group-hover:scale-110 transition-transform">
               location_on
             </span>
-            <h1 className="font-semibold text-xs sm:text-sm tracking-tight text-primary truncate max-w-[120px] sm:max-w-[200px]">
-              {locationName}
-            </h1>
+            <span className="flex min-w-0 flex-col items-start leading-tight">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">Home Neighborhood</span>
+              <h1 className="font-semibold text-sm sm:text-base md:text-lg tracking-tight text-primary truncate max-w-[40vw] sm:max-w-[240px]">
+                {locationName}
+              </h1>
+            </span>
             <span className="material-symbols-outlined text-base sm:text-lg text-primary/70 shrink-0 group-hover:translate-y-0.5 transition-transform">
               keyboard_arrow_down
             </span>
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1 shrink-0">
+          <nav className="hidden lg:flex items-center gap-1 shrink-0">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key
               return (
@@ -243,17 +266,39 @@ export default function HomeShell({ profile, initialSocietyName }: HomeShellProp
 
       {/* Main Content Area */}
       <main className="flex-1 w-full bg-background" key={feedRefreshKey}>
-        <div className="mx-auto w-full max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6">
-          {activeTab === 'nearby' && <ActivitiesPage embedded />}
-          {activeTab === 'business' && <BusinessFeedPage embedded />}
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-5 md:px-6 lg:px-8 py-4 md:py-6">
+          {activeTab === 'nearby' && <ActivitiesPage embedded radiusKm={discoveryRadius} />}
+          {activeTab === 'business' && <BusinessFeedPage embedded radiusKm={discoveryRadius} />}
           {activeTab === 'community' && <CommunityFeedPage embedded />}
-          {activeTab === 'profile' && <ProfileTab />}
+          {activeTab === 'chat' && (
+            <div className="w-full flex flex-col items-center justify-center py-16 sm:py-24 text-center">
+              <span className="material-symbols-outlined text-6xl text-on-surface-variant/40 mb-4">chat</span>
+              <h2 className="text-2xl sm:text-3xl font-bold text-on-surface mb-2">Messages</h2>
+              <p className="text-sm sm:text-base text-on-surface-variant max-w-md">
+                View your conversations and chat with neighbors from your nearby activities.
+              </p>
+              <button
+                onClick={() => router.push('/chat')}
+                className="mt-6 px-8 py-3 bg-primary text-on-primary rounded-full font-semibold text-base shadow-md hover:shadow-lg active:scale-95 transition-all"
+              >
+                Go to Chat
+              </button>
+            </div>
+          )}
+          {activeTab === 'profile' && (
+            <ProfileTab
+              discoveryRadius={discoveryRadius}
+              notificationsEnabled={notificationsEnabled}
+              onDiscoveryRadiusChange={handleDiscoveryRadiusChange}
+              onNotificationsEnabledChange={handleNotificationsEnabledChange}
+            />
+          )}
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="bg-background/95 border-t border-outline-variant/30 fixed bottom-0 left-0 right-0 w-full z-40 backdrop-blur-md pb-safe md:hidden">
-        <div className="grid grid-cols-4 gap-1 px-2 py-1.5 sm:px-3 sm:py-2">
+      <nav className="bg-white/95 border-t border-outline-variant/30 fixed bottom-0 left-0 right-0 w-full z-40 backdrop-blur-md pb-safe lg:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.04)]">
+        <div className="grid grid-cols-5 gap-1 px-2 py-1.5 sm:px-3 sm:py-2">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.key
             return (
@@ -293,9 +338,12 @@ export default function HomeShell({ profile, initialSocietyName }: HomeShellProp
       <NotificationDrawer
         isOpen={showNotificationDrawer}
         onClose={() => setShowNotificationDrawer(false)}
-        userId={profile.id}
         unreadCount={unreadCount}
         setUnreadCount={setUnreadCount}
+        userId={profile.id ?? ''}
+        societyId={activeSocietyId}
+        radiusKm={discoveryRadius}
+        enabled={notificationsEnabled}
       />
     </div>
   )

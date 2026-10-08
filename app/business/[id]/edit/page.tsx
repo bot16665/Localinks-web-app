@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
+import { validateImageFile } from '@/lib/image-validation'
 
 type Category = 'Cafes' | 'Restaurants' | 'Groceries' | 'Salon' | 'Services' | 'Retail' | 'Wellness' | 'Other'
 
@@ -123,6 +124,13 @@ export default function EditBusinessPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setState((prev) => ({ ...prev, error: validationError }))
+      e.currentTarget.value = ''
+      return
+    }
+
     setPhotoUploading(true)
 
     try {
@@ -199,6 +207,7 @@ export default function EditBusinessPage() {
     state.name.trim() &&
     state.category &&
     !state.submitting &&
+    !photoUploading &&
     !state.gstError &&
     state.gstNumber.trim().length === 15
 

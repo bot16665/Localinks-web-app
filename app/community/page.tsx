@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getPublicStoragePath } from '@/lib/storage-path'
 
 type Category = 'All' | 'Help Request' | 'Notice' | 'General'
 
@@ -11,6 +12,7 @@ const CATEGORIES: Category[] = ['All', 'Help Request', 'Notice', 'General']
 
 interface CommunityPost {
   id: string
+  user_id: string
   title: string
   description: string | null
   category: string
@@ -56,43 +58,38 @@ interface CommunityFeedPageProps {
 export default function CommunityFeedPage({ embedded = false }: CommunityFeedPageProps) {
   const router = useRouter()
   const [posts, setPosts] = useState<CommunityPost[]>([])
+  const [societyId, setSocietyId] = useState<string | null>(null)
   const [societyName, setSocietyName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category>('All')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null)
+  const [deleteMessage, setDeleteMessage] = useState<string | null>(null)
 
-  const fetchPosts = async (societyId: string) => {
+  const fetchPosts = async (currentSocietyId: string | null) => {
     const supabase = createClient()
     setLoading(true)
     setError(null)
 
+    if (!currentSocietyId) {
+      setPosts([])
+      setLoading(false)
+      return
+    }
+
     let query = supabase
       .from('posts')
-      .select('id, title, description, category, photo_url, created_at, user_id, profiles(name, profile_photo_url)')
+      .select('id, title, description, category, photo_url, created_at, user_id')
       .eq('type', 'local')
       .eq('status', 'active')
       .order('created_at', { ascending: false })
 
-    if (societyId) {
-      query = query.eq('society_id', societyId)
-    }
+    query = query.eq('society_id', currentSocietyId)
 
-    let { data: postsData, error: postsError } = await query
+    const { data: postsData, error: postsError } = await query
 
-    // Fallback if no posts in this specific society
-    if (!postsData || postsData.length === 0) {
-      const { data: allLocalPosts } = await supabase
-        .from('posts')
-        .select('id, title, description, category, photo_url, created_at, user_id, profiles(name, profile_photo_url)')
-        .eq('type', 'local')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(20)
-
-      postsData = allLocalPosts
-    }
-
-    if (postsError && !postsData) {
+    if (postsError) {
       setError('Failed to load posts')
       setLoading(false)
       return
@@ -104,10 +101,18 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
       return
     }
 
-    const mappedPosts: CommunityPost[] = postsData.map((row: any) => {
-      const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+    const authorIds = [...new Set(postsData.map((row) => row.user_id))]
+    const { data: authorProfiles } = await supabase
+      .from('public_profiles')
+      .select('id, name, profile_photo_url')
+      .in('id', authorIds)
+    const authorById = new Map((authorProfiles ?? []).map((profile) => [profile.id, profile]))
+
+    const mappedPosts: CommunityPost[] = postsData.map((row) => {
+      const profile = authorById.get(row.user_id)
       return {
         id: row.id,
+        user_id: row.user_id,
         title: row.title,
         description: row.description,
         category: row.category,
@@ -143,6 +148,11 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
   }
 
   useEffect(() => {
+    if (!embedded) {
+      router.replace('/?tab=community')
+      return
+    }
+
     const load = async () => {
       const supabase = createClient()
       const {
@@ -155,6 +165,8 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
         return
       }
 
+      setCurrentUserId(user.id)
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('society_id')
@@ -162,6 +174,7 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
         .maybeSingle()
 
       if (profile?.society_id) {
+        setSocietyId(profile.society_id)
         const { data: society } = await supabase
           .from('societies')
           .select('name')
@@ -171,18 +184,65 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
         if (society) {
           setSocietyName((society as Society).name)
         }
+      } else {
+        setSocietyId(null)
+        setSocietyName(null)
       }
 
-      await fetchPosts(profile?.society_id || '')
+      await fetchPosts(profile?.society_id || null)
     }
 
     load()
-  }, [router])
+  }, [embedded, router])
 
   const filteredPosts = useMemo(() => {
     if (selectedCategory === 'All') return posts
     return posts.filter((post) => post.category === selectedCategory)
   }, [posts, selectedCategory])
+
+  const handleDeletePost = async (post: CommunityPost) => {
+    if (!currentUserId || deletingPostId) return
+    if (!window.confirm(`Delete "${post.title}"? This action cannot be undone.`)) return
+
+    setDeletingPostId(post.id)
+    setDeleteMessage(null)
+
+    try {
+      const supabase = createClient()
+      const { data: postToDelete, error: fetchError } = await supabase
+        .from('posts')
+        .select('photo_url')
+        .eq('id', post.id)
+        .eq('user_id', currentUserId)
+        .maybeSingle()
+
+      if (fetchError) throw fetchError
+      if (!postToDelete) throw new Error('You can only delete your own community posts.')
+
+      const { data: deletedPost, error: deleteError } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id)
+        .eq('user_id', currentUserId)
+        .select('id')
+        .maybeSingle()
+
+      if (deleteError) throw deleteError
+      if (!deletedPost) throw new Error('Post could not be deleted.')
+
+      setPosts((currentPosts) => currentPosts.filter((item) => item.id !== post.id))
+
+      const photoPath = getPublicStoragePath(postToDelete.photo_url, 'community-images')
+      if (photoPath) {
+        const { error: storageError } = await supabase.storage.from('community-images').remove([photoPath])
+        if (storageError) setDeleteMessage('Post deleted, but its image could not be removed.')
+      }
+    } catch (err) {
+      setDeleteMessage(err instanceof Error ? err.message : 'Failed to delete post.')
+    } finally {
+      setDeletingPostId(null)
+    }
+  }
 
   const mainContent = (
     <div className="w-full flex flex-col text-on-surface">
@@ -214,6 +274,11 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
             {error}
           </div>
         )}
+        {deleteMessage && (
+          <div role="status" className="sm:col-span-full rounded-2xl border border-error/30 bg-error-container/20 p-4 text-center font-medium text-error text-sm">
+            {deleteMessage}
+          </div>
+        )}
 
         {!error && loading && (
           <>
@@ -227,56 +292,79 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
           <div className="sm:col-span-full flex flex-col items-center justify-center py-16 sm:py-24 text-center">
             <span className="material-symbols-outlined text-5xl text-on-surface-variant/40 mb-3">forum</span>
             <p className="text-lg sm:text-xl font-semibold text-on-surface mb-1">No community posts yet</p>
-            <p className="text-xs sm:text-sm text-on-surface-variant">Be the first to share something with your society!</p>
+            <p className="text-xs sm:text-sm text-on-surface-variant">
+              {societyId
+                ? 'Be the first to share something with your society!'
+                : 'Choose your neighborhood during onboarding to join its community.'}
+            </p>
           </div>
         )}
 
         {!error && !loading && filteredPosts.length > 0 &&
-          filteredPosts.map((post) => (
-            <Link key={post.id} href={`/community/${post.id}`} className="group">
-              <article className="bg-surface-container-low rounded-2xl border border-outline-variant/30 p-4 sm:p-5 active:scale-[0.98] hover:border-primary/40 hover:shadow-lg transition-all duration-200 h-full flex flex-col justify-between gap-3">
-                {/* Top info */}
-                <div>
-                  <div className="flex justify-between items-center gap-2 mb-2">
-                    <span className={`px-2.5 py-0.5 font-medium text-xs rounded-full ${
-                      post.category === 'Help Request' 
-                        ? 'bg-error/15 text-error border border-error/30' 
-                        : post.category === 'Notice'
-                        ? 'bg-primary/15 text-primary border border-primary/30'
-                        : 'bg-surface-container text-on-surface-variant border border-outline-variant/30'
-                    }`}>
-                      {post.category}
-                    </span>
+          filteredPosts.map((post) => {
+            const isOwnPost = currentUserId === post.user_id
+
+            return (
+              <article
+                key={post.id}
+                className="bg-surface-container-lowest rounded-2xl border border-outline-variant/20 p-4 sm:p-5 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:border-primary/40 hover:shadow-lg transition-all duration-200 h-full flex flex-col justify-between gap-3 group"
+              >
+                <div className="flex justify-between items-center gap-2">
+                  <span className={`px-2.5 py-0.5 font-medium text-xs rounded-full ${
+                    post.category === 'Help Request'
+                      ? 'bg-error/15 text-error border border-error/30'
+                      : post.category === 'Notice'
+                      ? 'bg-primary/15 text-primary border border-primary/30'
+                      : 'bg-surface-container text-on-surface-variant border border-outline-variant/30'
+                  }`}>
+                    {post.category}
+                  </span>
+                  <div className="flex items-center gap-2">
                     <span className="text-on-surface-variant/70 text-xs whitespace-nowrap">
                       {getRelativeTime(post.created_at)}
                     </span>
+                    {isOwnPost && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePost(post)}
+                        disabled={deletingPostId !== null}
+                        className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-error-container hover:text-error disabled:opacity-50"
+                        aria-label={`Delete ${post.title}`}
+                        title="Delete community post"
+                      >
+                        {deletingPostId === post.id ? (
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : (
+                          <span className="material-symbols-outlined text-lg">delete</span>
+                        )}
+                      </button>
+                    )}
                   </div>
-
-                  {/* Title */}
-                  <h2 className="font-semibold text-base leading-snug text-on-surface mb-1.5 line-clamp-2 group-hover:text-primary transition-colors">
-                    {post.title}
-                  </h2>
-
-                  {/* Description */}
-                  {post.description && (
-                    <p className="text-on-surface-variant text-xs sm:text-sm line-clamp-2 leading-relaxed">
-                      {post.description}
-                    </p>
-                  )}
                 </div>
 
-                {/* Optional Image */}
-                {post.photo_url && (
-                  <div className="w-full h-32 rounded-xl overflow-hidden shrink-0 bg-surface-container">
-                    <img
-                      src={post.photo_url}
-                      alt="Attachment"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                <Link href={`/community/${post.id}`} className="flex flex-1 flex-col gap-3">
+                  <div>
+                    <h2 className="font-semibold text-base leading-snug text-on-surface mb-1.5 line-clamp-2 group-hover:text-primary transition-colors">
+                      {post.title}
+                    </h2>
+                    {post.description && (
+                      <p className="text-on-surface-variant text-xs sm:text-sm line-clamp-2 leading-relaxed">
+                        {post.description}
+                      </p>
+                    )}
                   </div>
-                )}
 
-                {/* Footer */}
+                  {post.photo_url && (
+                    <div className="w-full h-32 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+                      <img
+                        src={post.photo_url}
+                        alt="Attachment"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+                </Link>
+
                 <div className="flex items-center justify-between border-t border-outline-variant/20 pt-2.5 mt-auto">
                   <div className="flex items-center gap-2 min-w-0">
                     {post.author_photo_url ? (
@@ -300,18 +388,20 @@ export default function CommunityFeedPage({ embedded = false }: CommunityFeedPag
                   </div>
                 </div>
               </article>
-            </Link>
-          ))}
+            )
+          })}
       </div>
 
       {/* FAB - Create Post */}
-      <button
-        aria-label="Create new community post"
-        onClick={() => router.push('/community/new')}
-        className={`fixed ${embedded ? 'bottom-20 md:bottom-6' : 'bottom-6'} right-5 sm:right-8 w-13 h-13 sm:w-14 sm:h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-xl z-40 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 touch-target`}
-      >
-        <span className="material-symbols-outlined text-2xl">add</span>
-      </button>
+      {societyId && (
+        <button
+          aria-label="Create new community post"
+          onClick={() => router.push('/community/new')}
+          className={`fixed ${embedded ? 'bottom-20 md:bottom-6' : 'bottom-6'} right-5 sm:right-8 w-13 h-13 sm:h-14 sm:w-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-xl z-40 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200 touch-target`}
+        >
+          <span className="material-symbols-outlined text-2xl">add</span>
+        </button>
+      )}
     </div>
   )
 

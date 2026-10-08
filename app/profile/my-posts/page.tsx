@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { getPublicStoragePath } from '@/lib/storage-path'
 
 type PostItem = {
   id: string
@@ -11,11 +12,11 @@ type PostItem = {
   category: string | null
   title: string
   description: string | null
+  photo_url: string | null
   event_date: string | null
   event_time: string | null
   status: string
   created_at: string
-  location: string | null
   society_id: string | null
   business_id: string | null
 }
@@ -30,6 +31,7 @@ type BusinessItem = {
 }
 
 type Tab = 'all' | 'individual' | 'business' | 'local'
+type DeleteTarget = { type: 'post' | 'business'; id: string }
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -73,8 +75,11 @@ export default function MyPostsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('all')
   const [deleting, setDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [removingPhotoId, setRemovingPhotoId] = useState<string | null>(null)
+  const [photoActionError, setPhotoActionError] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -89,9 +94,11 @@ export default function MyPostsPage() {
         return
       }
 
+      setCurrentUserId(user.id)
+
       const { data: postsData, error: postsError } = await supabase
         .from('posts')
-        .select('id, type, category, title, description, event_date, event_time, status, created_at, location, society_id, business_id')
+        .select('id, type, category, title, description, photo_url, event_date, event_time, status, created_at, society_id, business_id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -133,33 +140,127 @@ export default function MyPostsPage() {
 
   const isEmpty = !loading && filteredPosts.length === 0 && filteredBusinesses.length === 0
 
-  const confirmDelete = (id: string) => {
-    setDeleteTargetId(id)
+  const confirmDelete = (id: string, type: DeleteTarget['type'] = 'post') => {
+    setDeleteTarget({ id, type })
     setShowDeleteDialog(true)
     setDeleteError(null)
   }
 
   const handleDelete = async () => {
-    if (!deleteTargetId || deleting) return
+    if (!deleteTarget || deleting) return
     setDeleting(true)
     setDeleteError(null)
 
     try {
       const supabase = createClient()
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', deleteTargetId)
+      let storageCleanup: { bucket: string; paths: string[] } | null = null
 
-      if (error) throw error
+      if (deleteTarget.type === 'business') {
+        const business = businesses.find((item) => item.id === deleteTarget.id)
+        if (!business || !currentUserId) throw new Error('Business not found')
 
-      setPosts((prev) => prev.filter((p) => p.id !== deleteTargetId))
+        const [{ data: photos, error: photosError }, { data: promoPosts, error: promoPostsError }] = await Promise.all([
+          supabase.from('business_photos').select('photo_url').eq('business_id', deleteTarget.id),
+          supabase.from('posts').select('photo_url').eq('business_id', deleteTarget.id),
+        ])
+
+        if (photosError) throw photosError
+        if (promoPostsError) throw promoPostsError
+
+        const { data: deletedBusiness, error: businessError } = await supabase
+          .from('businesses')
+          .delete()
+          .eq('id', deleteTarget.id)
+          .eq('owner_id', currentUserId)
+          .select('id')
+          .maybeSingle()
+
+        if (businessError) throw businessError
+        if (!deletedBusiness) throw new Error('You can only delete your own business.')
+
+        const businessImagePaths = [business.photo_url, ...(photos ?? []).map((photo) => photo.photo_url)]
+          .map((url) => getPublicStoragePath(url, 'business-images'))
+          .filter((path): path is string => Boolean(path))
+        const promoImagePaths = (promoPosts ?? [])
+          .map((post) => getPublicStoragePath(post.photo_url, 'community-images'))
+          .filter((path): path is string => Boolean(path))
+
+        storageCleanup = { bucket: 'business-images', paths: businessImagePaths }
+        setBusinesses((prev) => prev.filter((item) => item.id !== deleteTarget.id))
+        setPosts((prev) => prev.filter((post) => post.business_id !== deleteTarget.id))
+
+        if (promoImagePaths.length > 0) {
+          const { error: storageError } = await supabase.storage.from('community-images').remove(promoImagePaths)
+          if (storageError) setError('Business deleted, but some uploaded promo images could not be removed.')
+        }
+      } else {
+        const targetPost = posts.find((post) => post.id === deleteTarget.id)
+        const { data: deletedPost, error } = await supabase
+          .from('posts')
+          .delete()
+          .eq('id', deleteTarget.id)
+          .select('id')
+          .maybeSingle()
+
+        if (error) throw error
+        if (!deletedPost) throw new Error('Post could not be deleted.')
+
+        setPosts((prev) => prev.filter((post) => post.id !== deleteTarget.id))
+        const photoPath = getPublicStoragePath(targetPost?.photo_url ?? null, 'community-images')
+        storageCleanup = photoPath ? { bucket: 'community-images', paths: [photoPath] } : null
+      }
+
       setShowDeleteDialog(false)
-      setDeleteTargetId(null)
+      setDeleteTarget(null)
+
+      if (storageCleanup && storageCleanup.paths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from(storageCleanup.bucket)
+          .remove(storageCleanup.paths)
+        if (storageError) setError('Item deleted, but some uploaded images could not be removed.')
+      }
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Failed to delete')
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const handleRemoveCoverPhoto = async (business: BusinessItem) => {
+    if (!business.photo_url || !currentUserId || removingPhotoId) return
+    if (!window.confirm(`Remove the cover photo for ${business.name}?`)) return
+
+    setRemovingPhotoId(business.id)
+    setPhotoActionError(null)
+
+    try {
+      const supabase = createClient()
+      const filePath = getPublicStoragePath(business.photo_url, 'business-images')
+      if (filePath) {
+        const { error: storageError } = await supabase.storage
+          .from('business-images')
+          .remove([filePath])
+        if (storageError) throw storageError
+      }
+
+      const { data: updatedBusiness, error: updateError } = await supabase
+        .from('businesses')
+        .update({ photo_url: null })
+        .eq('id', business.id)
+        .eq('owner_id', currentUserId)
+        .select('id')
+        .maybeSingle()
+
+      if (updateError) throw updateError
+      if (!updatedBusiness) throw new Error('You can only remove photos from your own business.')
+
+      setBusinesses((prev) =>
+        prev.map((item) => item.id === business.id ? { ...item, photo_url: null } : item)
+      )
+    } catch (err) {
+      setPhotoActionError(err instanceof Error ? err.message : 'Failed to remove cover photo')
+    } finally {
+      setRemovingPhotoId(null)
     }
   }
 
@@ -238,7 +339,7 @@ export default function MyPostsPage() {
               return (
                 <article
                   key={post.id}
-                  className="bg-surface-container-low rounded-2xl p-4 sm:p-5 border border-outline-variant/30 flex flex-col gap-2 hover:border-primary/40 transition-colors group"
+                  className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col gap-2 hover:border-primary/40 transition-colors group"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -289,10 +390,15 @@ export default function MyPostsPage() {
         {/* Businesses List */}
         {activeTab !== 'individual' && activeTab !== 'local' && (
           <div className="space-y-3 mt-3">
+            {photoActionError && (
+              <p role="status" className="rounded-xl border border-error/20 bg-error-container/40 px-3 py-2 text-xs text-error">
+                {photoActionError}
+              </p>
+            )}
             {filteredBusinesses.map((business) => (
               <article
                 key={business.id}
-                className="bg-surface-container-low rounded-2xl p-4 sm:p-5 border border-outline-variant/30 flex items-center gap-3.5 hover:border-primary/40 transition-colors group"
+                className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex items-center gap-3.5 hover:border-primary/40 transition-colors group"
               >
                 <div className="w-14 h-14 rounded-xl bg-surface-container flex items-center justify-center shrink-0 overflow-hidden">
                   {business.photo_url ? (
@@ -321,6 +427,31 @@ export default function MyPostsPage() {
                     {getRelativeTime(business.created_at)}
                   </p>
                 </div>
+                {business.photo_url && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCoverPhoto(business)}
+                    disabled={removingPhotoId !== null}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-error-container hover:text-error disabled:opacity-50"
+                    aria-label={`Remove cover photo for ${business.name}`}
+                    title="Remove cover photo"
+                  >
+                    {removingPhotoId === business.id ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <span className="material-symbols-outlined">delete</span>
+                    )}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => confirmDelete(business.id, 'business')}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-error-container hover:text-error"
+                  aria-label={`Delete ${business.name}`}
+                  title="Delete business"
+                >
+                  <span className="material-symbols-outlined">delete_forever</span>
+                </button>
               </article>
             ))}
           </div>
@@ -369,9 +500,13 @@ export default function MyPostsPage() {
         {showDeleteDialog && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-surface-container-low rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-outline-variant/30 space-y-4">
-              <h3 className="font-bold text-lg text-on-surface">Delete Post</h3>
+              <h3 className="font-bold text-lg text-on-surface">
+                {deleteTarget?.type === 'business' ? 'Delete Business' : 'Delete Post'}
+              </h3>
               <p className="text-sm text-on-surface-variant leading-relaxed">
-                Are you sure you want to delete this post? This action cannot be undone.
+                {deleteTarget?.type === 'business'
+                  ? 'Delete this business and its promo posts? This action cannot be undone.'
+                  : 'Are you sure you want to delete this post? This action cannot be undone.'}
               </p>
               {deleteError && <p className="text-xs text-error font-medium">{deleteError}</p>}
               <div className="flex gap-2.5 justify-end pt-2">
@@ -379,7 +514,7 @@ export default function MyPostsPage() {
                   type="button"
                   onClick={() => {
                     setShowDeleteDialog(false)
-                    setDeleteTargetId(null)
+                    setDeleteTarget(null)
                     setDeleteError(null)
                   }}
                   disabled={deleting}

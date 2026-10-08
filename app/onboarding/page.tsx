@@ -3,14 +3,23 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import LocationPicker from '@/components/LocationPicker'
+import type { LocationSelection } from '@/lib/location-geocoding'
 
 type Step = 1 | 2
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    return String(error.message)
+  }
+  return String(error)
+}
+
 interface OnboardingState {
   step: Step
-  latitude: number | null
-  longitude: number | null
-  locationCaptured: boolean
+  location: LocationSelection | null
   societyName: string
   saving: boolean
   error: string | null
@@ -20,48 +29,24 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [state, setState] = useState<OnboardingState>({
     step: 1,
-    latitude: null,
-    longitude: null,
-    locationCaptured: false,
+    location: null,
     societyName: '',
     saving: false,
     error: null,
   })
 
-  const captureLocation = () => {
-    if (!navigator.geolocation) {
-      setState((prev) => ({ ...prev, error: 'Geolocation is not supported by your browser' }))
-      return
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setState((prev) => ({
-          ...prev,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          locationCaptured: true,
-          error: null,
-        }))
-      },
-      () => {
-        setState((prev) => ({
-          ...prev,
-          error: 'Unable to retrieve your location. Please allow location access in your browser settings.',
-        }))
-      }
-    )
-  }
-
   const handleContinue = () => {
+    if (!state.location?.locality) return
     setState((prev) => ({ ...prev, step: 2 }))
   }
 
   const handleFinish = async () => {
-    const { latitude, longitude, societyName } = state
-    if (!latitude || !longitude || !societyName.trim()) return
+    const { location, societyName } = state
+    if (!location?.locality || !societyName.trim() || state.saving) return
 
     setState((prev) => ({ ...prev, saving: true, error: null }))
+    let currentOperation = 'check your account'
+    const point = `SRID=4326;POINT(${location.longitude} ${location.latitude})`
 
     try {
       const supabase = createClient()
@@ -71,7 +56,7 @@ export default function OnboardingPage() {
 
       if (!user) throw new Error('Not authenticated')
 
-      // Step 1: Check if society already exists by name.
+      currentOperation = 'find your society'
       const { data: existingSociety, error: societyQueryError } = await supabase
         .from('societies')
         .select('id')
@@ -85,12 +70,13 @@ export default function OnboardingPage() {
       if (existingSociety) {
         societyId = existingSociety.id
       } else {
-        // Step 2: Insert new society with PostGIS point in SRID=4326 format.
+        currentOperation = 'create your society'
         const { data: newSociety, error: insertError } = await supabase
           .from('societies')
           .insert({
             name: societyName.trim(),
-            location: `SRID=4326;POINT(${longitude} ${latitude})`,
+            address: location.displayName,
+            location: point,
           })
           .select('id')
           .single()
@@ -109,7 +95,7 @@ export default function OnboardingPage() {
         user.user_metadata?.picture ||
         null
 
-      // Step 3: Upsert the user's profile with location, society_id, name and photo.
+      currentOperation = 'save your profile and locations'
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .upsert(
@@ -118,7 +104,8 @@ export default function OnboardingPage() {
             name: displayName,
             profile_photo_url: avatarUrl,
             phone_number: user.phone || null,
-            location: `SRID=4326;POINT(${longitude} ${latitude})`,
+            current_location: point,
+            home_location: point,
             society_id: societyId,
           },
           { onConflict: 'id' }
@@ -126,7 +113,7 @@ export default function OnboardingPage() {
 
       if (profileUpdateError) throw profileUpdateError
 
-      // Step 4: Link user to society if not already linked.
+      currentOperation = 'join your society'
       const { data: existingMember } = await supabase
         .from('society_members')
         .select('user_id')
@@ -148,7 +135,7 @@ export default function OnboardingPage() {
       setState((prev) => ({
         ...prev,
         saving: false,
-        error: err instanceof Error ? err.message : 'Something went wrong',
+        error: `Could not ${currentOperation}: ${getErrorMessage(err)}`,
       }))
     }
   }
@@ -193,37 +180,16 @@ export default function OnboardingPage() {
           {state.step === 1 && (
             <div className="flex flex-col gap-4">
               {/* Location Capture Card */}
-              <button
-                type="button"
-                onClick={captureLocation}
-                disabled={state.locationCaptured || state.saving}
-                className={`flex items-center gap-4 p-4 sm:p-5 rounded-2xl transition-all duration-200 border text-left active:scale-[0.98] touch-target ${
-                  state.locationCaptured
-                    ? 'bg-primary/10 border-primary/50'
-                    : 'bg-surface-container-low border-outline-variant/30 hover:border-primary/40 hover:bg-surface-container'
-                }`}
-              >
-                <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                  state.locationCaptured ? 'bg-primary text-on-primary' : 'bg-primary/20 text-primary'
-                }`}>
-                  <span className="material-symbols-outlined text-2xl sm:text-3xl icon-fill">
-                    {state.locationCaptured ? 'check_circle' : 'my_location'}
-                  </span>
-                </div>
-                <div className="flex flex-col items-start min-w-0 flex-1">
-                  <span className="font-semibold text-base text-on-surface leading-tight">
-                    {state.locationCaptured ? 'Location detected' : 'Use my current location'}
-                  </span>
-                  <span className="text-xs sm:text-sm text-on-surface-variant mt-0.5">
-                    {state.locationCaptured
-                      ? `${state.latitude?.toFixed(4)}, ${state.longitude?.toFixed(4)}`
-                      : 'Tap to allow GPS location'}
-                  </span>
-                </div>
-                {state.locationCaptured && (
-                  <span className="material-symbols-outlined text-primary text-2xl icon-fill flex-shrink-0">check</span>
-                )}
-              </button>
+              <LocationPicker
+                value={state.location}
+                onChange={(location) => setState((prev) => ({
+                  ...prev,
+                  location,
+                  societyName: location.locality || prev.societyName,
+                  error: null,
+                }))}
+                disabled={state.saving}
+              />
 
               {state.error && (
                 <div className="bg-error-container/20 border border-error/30 rounded-2xl p-4 text-center">
@@ -251,6 +217,11 @@ export default function OnboardingPage() {
                 <p className="text-xs text-on-surface-variant/70 px-1">
                   If your society doesn&apos;t exist yet, we&apos;ll automatically create it for your area.
                 </p>
+                {state.location && (
+                  <p className="text-xs text-on-surface-variant px-1">
+                    {state.location.latitude.toFixed(5)}, {state.location.longitude.toFixed(5)} · {state.location.displayName}
+                  </p>
+                )}
               </div>
 
               {state.error && (
@@ -268,7 +239,7 @@ export default function OnboardingPage() {
         {state.step === 1 ? (
           <button
             onClick={handleContinue}
-            disabled={!state.locationCaptured || state.saving}
+            disabled={!state.location?.locality || state.saving}
             className="w-full bg-primary text-on-primary font-semibold text-base h-12 sm:h-14 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0 touch-target"
           >
             <span>Continue</span>

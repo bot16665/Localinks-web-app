@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { validateImageFile } from '@/lib/image-validation'
+import LocationPicker from '@/components/LocationPicker'
+import type { LocationSelection } from '@/lib/location-geocoding'
 
 type Category = 'Cafes' | 'Restaurants' | 'Groceries' | 'Salon' | 'Services' | 'Retail' | 'Wellness' | 'Other'
 
@@ -36,8 +39,8 @@ export default function CreateBusinessPage() {
     gstError: null,
   })
 
-  const [profileLocation, setProfileLocation] = useState<string | null>(null)
-  const [profileLoading, setProfileLoading] = useState(true)
+  const [businessLocation, setBusinessLocation] = useState<LocationSelection | null>(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -54,16 +57,7 @@ export default function CreateBusinessPage() {
         return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('location')
-        .eq('id', user.id)
-        .single()
-
-      if (profile?.location) {
-        setProfileLocation(profile.location as string)
-      }
-      setProfileLoading(false)
+      setAuthLoading(false)
     }
 
     fetchProfile()
@@ -86,6 +80,13 @@ export default function CreateBusinessPage() {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setState((prev) => ({ ...prev, error: validationError }))
+      e.currentTarget.value = ''
+      return
+    }
 
     setPhotoUploading(true)
 
@@ -122,8 +123,8 @@ export default function CreateBusinessPage() {
 
     if (!state.category || !state.name.trim()) return
     if (!validateGst(state.gstNumber)) return
-    if (!profileLocation) {
-      setState((prev) => ({ ...prev, error: 'Profile location not found. Please complete onboarding first.' }))
+    if (!businessLocation?.locality) {
+      setState((prev) => ({ ...prev, error: 'Select the shop location on the map before publishing.' }))
       return
     }
 
@@ -137,6 +138,7 @@ export default function CreateBusinessPage() {
 
       if (!user) throw new Error('Not authenticated')
 
+      const locationPoint = `SRID=4326;POINT(${businessLocation.longitude} ${businessLocation.latitude})`
       const { error: insertError } = await supabase.from('businesses').insert({
         owner_id: user.id,
         name: state.name.trim(),
@@ -144,8 +146,8 @@ export default function CreateBusinessPage() {
         description: state.description.trim() || null,
         open_time: state.openTime || null,
         close_time: state.closeTime || null,
-        address: state.address.trim() || null,
-        location: profileLocation,
+        address: state.address.trim() || businessLocation.displayName,
+        location: locationPoint,
         is_open: true,
         gst_number: state.gstNumber.trim().toUpperCase(),
         photo_url: photoUrl,
@@ -153,7 +155,7 @@ export default function CreateBusinessPage() {
 
       if (insertError) throw insertError
 
-      router.push('/business')
+      router.push('/?tab=business')
     } catch (err) {
       setState((prev) => ({
         ...prev,
@@ -167,9 +169,11 @@ export default function CreateBusinessPage() {
     state.name.trim() &&
     state.category &&
     !state.submitting &&
-    !profileLoading &&
+    !photoUploading &&
+    !authLoading &&
     !state.gstError &&
-    state.gstNumber.trim().length === 15
+    state.gstNumber.trim().length === 15 &&
+    !!businessLocation?.locality
 
   return (
     <div className="bg-background text-on-surface min-h-screen flex flex-col antialiased">
@@ -244,6 +248,17 @@ export default function CreateBusinessPage() {
               )
             })}
           </div>
+        </section>
+
+        <section className="space-y-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
+            Shop Location <span className="text-error">*</span>
+          </label>
+          <LocationPicker
+            value={businessLocation}
+            onChange={setBusinessLocation}
+            disabled={state.submitting}
+          />
         </section>
 
         {/* Details Grid */}

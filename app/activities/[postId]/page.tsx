@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { getPublicStoragePath } from '@/lib/storage-path'
 
 type PostDetail = {
   id: string
@@ -12,9 +13,9 @@ type PostDetail = {
   category: string
   title: string
   description: string | null
+  photo_url: string | null
   event_date: string
   event_time: string | null
-  location: string | null
   status: string
   created_at: string
   author_name: string
@@ -56,7 +57,7 @@ export default function ActivityDetailPage() {
   const fetchPost = useCallback(async (supabase: ReturnType<typeof createClient>) => {
     const { data, error: postError } = await supabase
       .from('posts')
-      .select('id, user_id, type, category, title, description, event_date, event_time, location, status, created_at, profiles(name, profile_photo_url)')
+      .select('id, user_id, type, category, title, description, photo_url, event_date, event_time, status, created_at')
       .eq('id', postId)
       .eq('type', 'individual')
       .single()
@@ -67,20 +68,24 @@ export default function ActivityDetailPage() {
       return
     }
 
-    const profile = Array.isArray((data as any).profiles) ? (data as any).profiles[0] : (data as any).profiles
+    const { data: profile } = await supabase
+      .from('public_profiles')
+      .select('name, profile_photo_url')
+      .eq('id', data.user_id)
+      .maybeSingle()
 
     const mapped: PostDetail = {
-      id: (data as any).id,
-      user_id: (data as any).user_id,
-      type: (data as any).type,
-      category: (data as any).category,
-      title: (data as any).title,
-      description: (data as any).description,
-      event_date: (data as any).event_date,
-      event_time: (data as any).event_time,
-      location: (data as any).location,
-      status: (data as any).status,
-      created_at: (data as any).created_at,
+      id: data.id,
+      user_id: data.user_id,
+      type: data.type,
+      category: data.category,
+      title: data.title,
+      description: data.description,
+      photo_url: data.photo_url,
+      event_date: data.event_date,
+      event_time: data.event_time,
+      status: data.status,
+      created_at: data.created_at,
       author_name: profile?.name || 'Unknown',
       author_photo_url: profile?.profile_photo_url || null,
     }
@@ -98,18 +103,21 @@ export default function ActivityDetailPage() {
 
     const { data: interests } = await supabase
       .from('interests')
-      .select('user_id, profiles(name, profile_photo_url)')
+      .select('user_id')
       .eq('post_id', postId)
 
     if (interests) {
-      const mapped = interests.map((row: any) => {
-        const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
-        return {
-          user_id: row.user_id,
-          name: profile?.name || 'Anonymous',
-          profile_photo_url: profile?.profile_photo_url || null,
-        }
-      })
+      const userIds = interests.map((row) => row.user_id)
+      const { data: profiles } = await supabase
+        .from('public_profiles')
+        .select('id, name, profile_photo_url')
+        .in('id', userIds)
+      const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]))
+      const mapped = interests.map((row) => ({
+        user_id: row.user_id,
+        name: profileById.get(row.user_id)?.name || 'Anonymous',
+        profile_photo_url: profileById.get(row.user_id)?.profile_photo_url || null,
+      }))
       setInterestedUsers(mapped)
     }
   }, [postId])
@@ -210,12 +218,23 @@ export default function ActivityDetailPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase
+      const { data: deletedPost, error } = await supabase
         .from('posts')
         .delete()
         .eq('id', postId)
+        .select('id')
+        .maybeSingle()
 
       if (error) throw error
+      if (!deletedPost) throw new Error('Activity could not be deleted.')
+
+      const photoPath = getPublicStoragePath(post?.photo_url ?? null, 'community-images')
+      if (photoPath) {
+        const { error: storageError } = await supabase.storage
+          .from('community-images')
+          .remove([photoPath])
+        if (storageError) console.error('Activity deleted, but its image could not be removed:', storageError)
+      }
 
       router.push('/activities')
     } catch (err) {
@@ -321,12 +340,6 @@ export default function ActivityDetailPage() {
             <span className="material-symbols-outlined text-primary text-xl icon-fill">event</span>
             <span className="font-medium text-sm sm:text-base">{formatEventDateTime(post.event_date, post.event_time)}</span>
           </div>
-          {post.location && (
-            <div className="flex items-center gap-3 text-on-surface-variant">
-              <span className="material-symbols-outlined text-primary text-xl">location_on</span>
-              <span className="text-sm sm:text-base">{post.location}</span>
-            </div>
-          )}
         </section>
 
         {/* Interested Users List */}

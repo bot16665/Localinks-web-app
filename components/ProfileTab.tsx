@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { validateImageFile } from '@/lib/image-validation'
 
 type UserProfile = {
   name: string
@@ -105,16 +106,27 @@ function EditableRow({
   )
 }
 
-export default function ProfileTab() {
+interface ProfileTabProps {
+  discoveryRadius: number
+  notificationsEnabled: boolean
+  onDiscoveryRadiusChange: (radius: number) => void
+  onNotificationsEnabledChange: (enabled: boolean) => void
+}
+
+export default function ProfileTab({
+  discoveryRadius,
+  notificationsEnabled,
+  onDiscoveryRadiusChange,
+  onNotificationsEnabledChange,
+}: ProfileTabProps) {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
-  const [discoveryRadius, setDiscoveryRadius] = useState(5)
   const [postCount, setPostCount] = useState(0)
   const [loggingOut, setLoggingOut] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [photoUploadError, setPhotoUploadError] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -208,32 +220,42 @@ export default function ProfileTab() {
     const file = e.target.files?.[0]
     if (!file || !userId) return
 
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setPhotoUploadError(validationError)
+      e.currentTarget.value = ''
+      return
+    }
+
     setUploadingPhoto(true)
+    setPhotoUploadError(null)
     const supabase = createClient()
 
     try {
-      const fileExt = file.name.split('.').pop() || 'jpg'
-      const fileName = `avatar-${userId}-${Date.now()}.${fileExt}`
+      const fileExt = file.type === 'image/jpeg' ? 'jpg' : file.type.split('/')[1]
+      const fileName = `${userId}/avatar.${fileExt}`
 
-      // Try uploading to business-images or profile-images
       const { error: uploadError } = await supabase.storage
-        .from('business-images')
-        .upload(fileName, file, { cacheControl: '3600', upsert: true })
+        .from('profile-images')
+        .upload(fileName, file, { cacheControl: '3600', contentType: file.type, upsert: true })
 
       if (uploadError) throw uploadError
 
-      const { data: publicUrlData } = supabase.storage.from('business-images').getPublicUrl(fileName)
+      const { data: publicUrlData } = supabase.storage.from('profile-images').getPublicUrl(fileName)
       const photoUrl = publicUrlData?.publicUrl
 
       if (photoUrl) {
-        await supabase
+        const { error: profileUpdateError } = await supabase
           .from('profiles')
           .upsert({ id: userId, profile_photo_url: photoUrl }, { onConflict: 'id' })
+
+        if (profileUpdateError) throw profileUpdateError
 
         setProfile((prev) => (prev ? { ...prev, profile_photo_url: photoUrl } : null))
       }
     } catch (err) {
       console.error('Failed to upload avatar:', err)
+      setPhotoUploadError(err instanceof Error ? err.message : 'Failed to upload avatar')
     } finally {
       setUploadingPhoto(false)
     }
@@ -278,22 +300,18 @@ export default function ProfileTab() {
     setDeleting(true)
     setDeleteError(null)
 
-    const supabase = createClient()
-    
-    // Delete app data only (not auth.users account).
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId)
+    try {
+      const response = await fetch('/api/account', { method: 'DELETE' })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || 'Failed to delete account')
 
-    if (error) {
-      setDeleteError(error.message)
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.replace('/login')
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete account')
       setDeleting(false)
-      return
     }
-
-    await supabase.auth.signOut()
-    router.push('/login')
   }
 
   if (loading) {
@@ -308,10 +326,10 @@ export default function ProfileTab() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6 pb-24 md:pb-8 animate-in fade-in duration-200">
+    <div className="w-full max-w-2xl mx-auto space-y-5 sm:space-y-6 pb-24 md:pb-8 animate-in fade-in duration-200">
       
       {/* Profile Header Card */}
-      <section className="bg-surface-container-low rounded-3xl p-6 border border-outline-variant/30 shadow-lg flex flex-col sm:flex-row items-center sm:items-start gap-5">
+      <section className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col sm:flex-row items-center sm:items-start gap-5">
         
         {/* Avatar with upload action */}
         <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
@@ -351,6 +369,7 @@ export default function ProfileTab() {
           <p className="text-xs sm:text-sm text-on-surface-variant mt-0.5">
             {profile?.phone_number || profile?.phone || 'No phone set'}
           </p>
+          {photoUploadError && <p role="alert" className="mt-2 text-xs text-error">{photoUploadError}</p>}
 
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4">
             <Link
@@ -374,7 +393,7 @@ export default function ProfileTab() {
       </section>
 
       {/* Personal Info Section */}
-      <section className="bg-surface-container-low rounded-3xl p-5 sm:p-6 border border-outline-variant/30 shadow-md space-y-1">
+      <section className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-1">
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-3">
           Personal Information
         </h3>
@@ -426,7 +445,7 @@ export default function ProfileTab() {
       </section>
 
       {/* Discovery & Preferences */}
-      <section className="bg-surface-container-low rounded-3xl p-5 sm:p-6 border border-outline-variant/30 shadow-md space-y-5">
+      <section className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-5">
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary">
           Discovery Preferences
         </h3>
@@ -442,7 +461,7 @@ export default function ProfileTab() {
             min="1"
             max="25"
             value={discoveryRadius}
-            onChange={(e) => setDiscoveryRadius(Number(e.target.value))}
+            onChange={(e) => onDiscoveryRadiusChange(Number(e.target.value))}
             className="w-full accent-primary h-2 bg-surface-container rounded-lg cursor-pointer"
           />
           <div className="flex justify-between text-[11px] text-on-surface-variant">
@@ -454,14 +473,14 @@ export default function ProfileTab() {
         {/* Notification Switch */}
         <div className="flex items-center justify-between pt-3 border-t border-outline-variant/20">
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-on-surface">Push Notifications</span>
-            <span className="text-xs text-on-surface-variant">Get notified for nearby activities & businesses</span>
+            <span className="text-sm font-medium text-on-surface">Live Alerts</span>
+            <span className="text-xs text-on-surface-variant">Show in-app banners for new neighborhood posts</span>
           </div>
           <button
             type="button"
             role="switch"
             aria-checked={notificationsEnabled}
-            onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+            onClick={() => onNotificationsEnabledChange(!notificationsEnabled)}
             className={`w-12 h-7 rounded-full transition-colors relative p-0.5 ${
               notificationsEnabled ? 'bg-primary' : 'bg-surface-container-high'
             }`}
@@ -476,7 +495,7 @@ export default function ProfileTab() {
       </section>
 
       {/* Account Actions */}
-      <section className="bg-surface-container-low rounded-3xl p-5 sm:p-6 border border-outline-variant/30 shadow-md space-y-3">
+      <section className="bg-surface-container-lowest rounded-2xl p-5 sm:p-6 border border-outline-variant/20 shadow-[0_4px_20px_rgba(0,0,0,0.04)] space-y-3">
         <h3 className="text-xs font-bold uppercase tracking-wider text-primary mb-1">
           Account
         </h3>
@@ -507,7 +526,7 @@ export default function ProfileTab() {
           <div className="bg-surface-container-low rounded-3xl p-6 max-w-sm w-full border border-outline-variant/40 shadow-2xl space-y-4">
             <h3 className="font-bold text-lg text-on-surface">Delete Account?</h3>
             <p className="text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-              This action will permanently delete your profile and posts. Type <strong className="text-error font-bold">DELETE</strong> to confirm.
+              This permanently deletes your LocalLink account and associated content. Type <strong className="text-error font-bold">DELETE</strong> to confirm.
             </p>
 
             <input

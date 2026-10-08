@@ -45,7 +45,26 @@ Create a `.env.local` file in the project root:
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-server-only-service-role-key
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY` is used only by the account-deletion Route Handler. Never prefix it with `NEXT_PUBLIC_` or expose it to client code.
+
+### Apply the current Supabase SQL changes
+
+The SQL files in `supabase/migrations/` are manual SQL scripts, not automatically applied by `npm run dev`. In the Supabase SQL Editor, apply the following additions in order after the existing schema and older migrations:
+
+1. `Separate current and home location.sql`
+2. `Geolocation and business privacy.sql`
+3. `Public profile privacy.sql`
+4. `Persist discovery preferences.sql`
+5. `Chat authorization hardening.sql`
+13. `Chat delete policy.sql`
+14. `Storage upload restrictions.sql`
+15. `Business image owner delete policy.sql`
+16. `Enable Realtime tables.sql`
+17. `Cascade chats when posts are deleted.sql`
+The nearby business/activity feeds require the first migration; the community author lookup requires the third. The storage script expects the `business-images` and `community-images` buckets to exist. Create any missing bucket in Supabase Storage before relying on uploads.
 
 ### Run the dev server
 

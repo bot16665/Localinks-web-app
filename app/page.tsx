@@ -3,7 +3,17 @@ import { redirect } from 'next/navigation'
 import HomeShell from '@/components/HomeShell'
 
 // Server Component: validates session and loads the user's profile.
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>
+}) {
+  const requestedTab = (await searchParams).tab
+  const initialTab =
+    requestedTab === 'business' || requestedTab === 'community' || requestedTab === 'chat' || requestedTab === 'profile'
+      ? requestedTab
+      : 'nearby'
+
   const supabase = await createClient()
 
   const {
@@ -17,7 +27,7 @@ export default async function Page() {
 
   let { data: profile } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, name, profile_photo_url, society_id, current_location, home_location, discovery_radius_km, in_app_notifications_enabled')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -44,13 +54,13 @@ export default async function Page() {
         },
         { onConflict: 'id' }
       )
-      .select('*')
+      .select('id, name, profile_photo_url, society_id, current_location, home_location, discovery_radius_km, in_app_notifications_enabled')
       .single()
 
     profile = newProfile
   }
 
-  if (!profile?.location) {
+  if (!profile?.current_location || !profile?.home_location) {
     redirect('/onboarding')
   }
 
@@ -67,5 +77,13 @@ export default async function Page() {
     }
   }
 
-  return <HomeShell profile={profile} initialSocietyName={initialSocietyName} />
+  return (
+    <HomeShell
+      profile={profile}
+      initialTab={initialTab}
+      initialSocietyName={initialSocietyName}
+      initialDiscoveryRadius={profile.discovery_radius_km ?? 5}
+      initialNotificationsEnabled={profile.in_app_notifications_enabled ?? true}
+    />
+  )
 }

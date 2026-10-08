@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { validateImageFile } from '@/lib/image-validation'
 
 type Category = 'Help Request' | 'Notice' | 'General'
 
@@ -63,6 +64,13 @@ export default function CreateCommunityPostPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      setState((prev) => ({ ...prev, error: validationError }))
+      e.currentTarget.value = ''
+      return
+    }
+
     setPhotoUploading(true)
 
     try {
@@ -121,7 +129,7 @@ export default function CreateCommunityPostPage() {
 
       if (insertError) throw insertError
 
-      router.push('/community')
+      router.push('/?tab=community')
     } catch (err) {
       setState((prev) => ({
         ...prev,
@@ -134,6 +142,7 @@ export default function CreateCommunityPostPage() {
   const isFormValid =
     state.title.trim() &&
     state.category &&
+    !photoUploading &&
     !state.submitting &&
     !profileLoading &&
     !!societyId
@@ -174,7 +183,7 @@ export default function CreateCommunityPostPage() {
                     className={`flex-shrink-0 text-xs sm:text-sm font-medium px-4 py-2 rounded-full active:scale-95 transition-all touch-target ${
                       isSelected
                         ? 'bg-primary text-on-primary shadow-sm'
-                        : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container border border-outline-variant/30'
+                        : 'bg-secondary-container text-primary hover:bg-surface-container-high border border-transparent'
                     }`}
                   >
                     {cat}
@@ -195,7 +204,7 @@ export default function CreateCommunityPostPage() {
               value={state.title}
               onChange={(e) => setState((prev) => ({ ...prev, title: e.target.value }))}
               placeholder="What's happening in the neighborhood?"
-              className="w-full bg-surface-container-low border border-outline-variant/40 rounded-2xl py-3.5 px-4 text-base text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+              className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl py-3.5 px-4 text-base text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               autoFocus
             />
           </div>
@@ -211,7 +220,7 @@ export default function CreateCommunityPostPage() {
               onChange={(e) => setState((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Add more details, requirements, or contact info..."
               rows={4}
-              className="w-full bg-surface-container-low border border-outline-variant/40 rounded-2xl py-3 px-4 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+              className="w-full bg-surface-container-low border border-outline-variant/50 rounded-xl py-3 px-4 text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
             />
           </div>
 
@@ -236,7 +245,7 @@ export default function CreateCommunityPostPage() {
                   </div>
                 </div>
               ) : (
-                <div className="w-full h-32 rounded-2xl border-2 border-dashed border-outline-variant/40 hover:border-primary/40 flex flex-col items-center justify-center bg-surface-container-low text-on-surface-variant transition-colors">
+                <div className="w-full h-32 rounded-xl border-2 border-dashed border-outline-variant/50 hover:border-primary/50 flex flex-col items-center justify-center bg-surface-container-low text-on-surface-variant transition-colors">
                   {photoUploading ? (
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   ) : (
@@ -265,7 +274,7 @@ export default function CreateCommunityPostPage() {
             form="create-community-form"
             type="submit"
             disabled={!isFormValid}
-            className="w-full bg-primary text-on-primary py-3.5 rounded-2xl font-semibold text-base shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0 flex justify-center items-center gap-2 touch-target"
+            className="w-full bg-primary-container text-white py-3.5 rounded-xl font-semibold text-base shadow-[0_12px_32px_rgba(14,165,165,0.12)] hover:brightness-105 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:shadow-none flex justify-center items-center gap-2 touch-target"
           >
             {state.submitting ? (
               <>

@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const root = 'C:\\Users\\Azhar Shaikh.HSNCU0\\Desktop\\Desktop-web-app\\my-app';
-const skipDirs = ['.next', 'node_modules', '.git', 'design-reference'];
 
 // Files where bg-surface-container-lowest should become bg-surface-container for cards
 const filesToUpdate = [

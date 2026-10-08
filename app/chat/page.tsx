@@ -61,6 +61,8 @@ export default function ChatInboxPage() {
   const [chats, setChats] = useState<ChatWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -98,7 +100,7 @@ export default function ChatInboxPage() {
           const otherUserId = chat.user_one_id === user.id ? chat.user_two_id : chat.user_one_id
 
           const [profileResult, messageResult, postResult] = await Promise.all([
-            supabase.from('profiles').select('name, profile_photo_url').eq('id', otherUserId).maybeSingle(),
+            supabase.from('public_profiles').select('name, profile_photo_url').eq('id', otherUserId).maybeSingle(),
             supabase
               .from('messages')
               .select('content, sent_at')
@@ -124,6 +126,28 @@ export default function ChatInboxPage() {
 
     load()
   }, [router])
+
+  const handleDeleteChat = async (chatId: string, otherUserName: string) => {
+    if (deletingChatId) return
+    if (!window.confirm(`Delete this conversation with ${otherUserName}? This also deletes its messages for both people.`)) return
+
+    setDeletingChatId(chatId)
+    setDeleteError(null)
+    try {
+      const supabase = createClient()
+      const { error: deleteChatError } = await supabase
+        .from('chats')
+        .delete()
+        .eq('id', chatId)
+
+      if (deleteChatError) throw deleteChatError
+      setChats((previous) => previous.filter((item) => item.chat.id !== chatId))
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete conversation')
+    } finally {
+      setDeletingChatId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -171,6 +195,11 @@ export default function ChatInboxPage() {
 
       {/* Main Inbox */}
       <main className="flex-1 w-full max-w-2xl mx-auto px-2 sm:px-4 py-3">
+        {deleteError && (
+          <p role="alert" className="mx-2 mb-3 rounded-xl border border-error/30 bg-error-container/40 px-3 py-2 text-sm text-error">
+            {deleteError}
+          </p>
+        )}
         {chats.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 sm:py-24 text-center px-4">
             <div className="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-3 border border-outline-variant/30">
@@ -182,11 +211,11 @@ export default function ChatInboxPage() {
         ) : (
           <div className="flex flex-col divide-y divide-outline-variant/20">
             {chats.map(({ chat, otherUser, lastMessage, post }) => (
-              <Link
-                key={chat.id}
-                href={`/chat/${chat.id}`}
-                className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 hover:bg-surface-container-low rounded-2xl active:scale-[0.99] transition-all group"
-              >
+              <div key={chat.id} className="flex items-center gap-1 rounded-2xl hover:bg-surface-container-low">
+                <Link
+                  href={`/chat/${chat.id}`}
+                  className="flex min-w-0 flex-1 items-center gap-3 p-3.5 sm:gap-4 sm:p-4 active:scale-[0.99] transition-all group"
+                >
                 {/* Avatar */}
                 <div className="relative flex-shrink-0">
                   {otherUser.profile_photo_url ? (
@@ -200,7 +229,6 @@ export default function ChatInboxPage() {
                       {getInitials(otherUser.name)}
                     </div>
                   )}
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-primary rounded-full border-2 border-background"></div>
                 </div>
 
                 {/* Content */}
@@ -231,7 +259,22 @@ export default function ChatInboxPage() {
                 <span className="material-symbols-outlined text-base text-on-surface-variant flex-shrink-0 group-hover:translate-x-0.5 transition-transform">
                   chevron_right
                 </span>
-              </Link>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteChat(chat.id, otherUser.name)}
+                  disabled={deletingChatId !== null}
+                  aria-label={`Delete conversation with ${otherUser.name}`}
+                  title="Delete conversation"
+                  className="mr-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-error disabled:opacity-50"
+                >
+                  {deletingChatId === chat.id ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : (
+                    <span className="material-symbols-outlined">delete</span>
+                  )}
+                </button>
+              </div>
             ))}
           </div>
         )}

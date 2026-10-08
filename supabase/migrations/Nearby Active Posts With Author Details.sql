@@ -23,6 +23,7 @@ returns table (
 language sql
 stable
 security definer
+set search_path = public, extensions
 as $$
   select
     p.id,
@@ -51,7 +52,10 @@ as $$
     and ST_DWithin(
       p.location::geography,
       (select location::geography from public.profiles where id = auth.uid()),
-      radius_km * 1000
+      least(greatest(coalesce(radius_km, 10), 1), 25) * 1000
     )
   order by distance_km asc;
 $$;
+
+    revoke all on function public.nearby_posts(double precision, text) from public, anon;
+    grant execute on function public.nearby_posts(double precision, text) to authenticated;

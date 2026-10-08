@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase'
+import { useEffect, useState, useCallback, useEffectEvent, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 export interface AppNotification {
   id: string
-  type: 'activity' | 'business' | 'community' | 'reply' | 'interest' | 'message'
+  type: 'nearby' | 'business' | 'community'
   title: string
   description: string
   link: string
@@ -19,16 +19,44 @@ export interface AppNotification {
 interface NotificationDrawerProps {
   isOpen: boolean
   onClose: () => void
-  userId?: string
   unreadCount: number
   setUnreadCount: (count: number | ((prev: number) => number)) => void
+  userId: string
+  societyId: string | null
+  radiusKm: number
+  enabled: boolean
+}
+
+interface NearbyActivity {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  created_at: string
+  author_name: string | null
+  author_photo_url: string | null
+}
+
+interface NearbyBusiness {
+  id: string
+  owner_id: string
+  name: string
+  category: string | null
+}
+
+interface FeedPost {
+  id: string
+  user_id: string
+  title: string
+  description: string | null
+  created_at: string
+  business_id?: string | null
 }
 
 function getRelativeTime(iso: string): string {
   const now = new Date()
   const date = new Date(iso)
-  const diffMs = now.getTime() - date.getTime()
-  const diffSec = Math.floor(diffMs / 1000)
+  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000)
   const diffMin = Math.floor(diffSec / 60)
   const diffHour = Math.floor(diffMin / 60)
   const diffDay = Math.floor(diffHour / 24)
@@ -40,246 +68,350 @@ function getRelativeTime(iso: string): string {
   return date.toLocaleDateString()
 }
 
+function getReadIds(): Set<string> {
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem('locallink_read_notifications') || '[]')
+    return new Set(Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : [])
+  } catch {
+    return new Set()
+  }
+}
+
 export default function NotificationDrawer({
   isOpen,
   onClose,
-  userId,
   unreadCount,
   setUnreadCount,
+  userId,
+  societyId,
+  radiusKm,
+  enabled,
 }: NotificationDrawerProps) {
   const router = useRouter()
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'activity' | 'business' | 'community'>('all')
+  const [filter, setFilter] = useState<'all' | 'nearby' | 'business' | 'community'>('all')
+  const seenNotificationIds = useRef(new Set<string>())
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true)
+    if (!enabled || !userId) {
+      setNotifications([])
+      setUnreadCount(0)
+      setLoading(false)
+      return
+    }
+
     const supabase = createClient()
 
     try {
-      // 1. Fetch recent activity posts
-      const { data: recentPosts } = await supabase
-        .from('posts')
-        .select('id, type, category, title, description, created_at, user_id, profiles(name, profile_photo_url)')
-        .order('created_at', { ascending: false })
-        .limit(15)
+      const { data: activityData, error: activityError } = await supabase.rpc('nearby_posts', {
+        radius_km: radiusKm,
+        post_type: 'individual',
+      })
+      if (activityError) throw activityError
 
-      // 2. Fetch recent businesses
-      const { data: recentBusinesses } = await supabase
-        .from('businesses')
-        .select('id, name, category, created_at, owner_id')
-        .order('created_at', { ascending: false })
-        .limit(10)
+      const { data: businessData, error: businessError } = await supabase.rpc('nearby_businesses', {
+        radius_km: radiusKm,
+        filter_category: null,
+      })
+      if (businessError) throw businessError
 
-      // 3. Fetch recent replies to posts
-      const { data: recentReplies } = await supabase
-        .from('replies')
-        .select('id, post_id, content, created_at, user_id, profiles(name, profile_photo_url), posts(title, user_id)')
-        .order('created_at', { ascending: false })
-        .limit(10)
+      const nearbyActivities = (activityData ?? []) as NearbyActivity[]
+      const nearbyBusinesses = (businessData ?? []) as NearbyBusiness[]
+      const otherBusinesses = nearbyBusinesses.filter((business) => business.owner_id !== userId)
+      const businessIds = otherBusinesses.map((business) => business.id)
 
-      const readIds = new Set<string>(
-        JSON.parse(localStorage.getItem('locallink_read_notifications') || '[]')
-      )
+      let communityPosts: FeedPost[] = []
+      if (societyId) {
+        const { data, error } = await supabase
+          .from('posts')
+          .select('id, user_id, title, description, created_at')
+          .eq('type', 'local')
+          .eq('status', 'active')
+          .eq('society_id', societyId)
+          .neq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        if (error) throw error
+        communityPosts = (data ?? []) as FeedPost[]
+      }
+
+      let businessDates = new Map<string, string>()
+      let businessPromos: FeedPost[] = []
+      if (businessIds.length > 0) {
+        const [businessRows, promoRows] = await Promise.all([
+          supabase.from('public_businesses').select('id, created_at').in('id', businessIds),
+          supabase
+            .from('posts')
+            .select('id, user_id, title, description, created_at, business_id')
+            .eq('type', 'business')
+            .eq('status', 'active')
+            .in('business_id', businessIds)
+            .neq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(20),
+        ])
+        if (businessRows.error) throw businessRows.error
+        if (promoRows.error) throw promoRows.error
+        businessDates = new Map((businessRows.data ?? []).map((business) => [business.id, business.created_at]))
+        businessPromos = (promoRows.data ?? []) as FeedPost[]
+      }
+
+      const businessById = new Map(nearbyBusinesses.map((business) => [business.id, business]))
+      const authorIds = [...new Set([...communityPosts, ...businessPromos].map((post) => post.user_id))]
+      const { data: authorProfiles } = authorIds.length > 0
+        ? await supabase.from('public_profiles').select('id, name, profile_photo_url').in('id', authorIds)
+        : { data: [] }
+      const authorById = new Map((authorProfiles ?? []).map((profile) => [profile.id, profile]))
 
       const items: AppNotification[] = []
-
-      // Map Posts
-      if (recentPosts) {
-        for (const post of recentPosts) {
-          const profile = Array.isArray((post as any).profiles)
-            ? (post as any).profiles[0]
-            : (post as any).profiles
-
-          const isActivity = post.type === 'individual'
-          const isCommunity = post.type === 'local' || post.type === 'business'
-          const notifType = isActivity ? 'activity' : 'community'
-
-          items.push({
-            id: `post-${post.id}`,
-            type: notifType,
-            title: isActivity
-              ? `New Activity: ${post.title}`
-              : `Community Post: ${post.title}`,
-            description: post.description || `${profile?.name || 'A neighbor'} posted a new ${post.category || 'update'}.`,
-            link: isActivity ? `/activities/${post.id}` : `/community/${post.id}`,
-            created_at: post.created_at,
-            is_read: readIds.has(`post-${post.id}`),
-            author_name: profile?.name,
-            author_photo_url: profile?.profile_photo_url,
-          })
-        }
+      for (const post of nearbyActivities) {
+        if (post.user_id === userId) continue
+        items.push({
+          id: `post-${post.id}`,
+          type: 'nearby',
+          title: `New Nearby Activity: ${post.title}`,
+          description: post.description || `${post.author_name || 'A neighbor'} posted a nearby activity.`,
+          link: `/activities/${post.id}`,
+          created_at: post.created_at,
+          is_read: false,
+          author_name: post.author_name || undefined,
+          author_photo_url: post.author_photo_url,
+        })
       }
 
-      // Map Businesses
-      if (recentBusinesses) {
-        for (const b of recentBusinesses) {
-          items.push({
-            id: `biz-${b.id}`,
-            type: 'business',
-            title: `New Business: ${b.name}`,
-            description: `A new ${b.category || 'local store'} was added to your neighborhood.`,
-            link: `/business/${b.id}`,
-            created_at: b.created_at,
-            is_read: readIds.has(`biz-${b.id}`),
-          })
-        }
+      for (const post of communityPosts) {
+        const author = authorById.get(post.user_id)
+        items.push({
+          id: `post-${post.id}`,
+          type: 'community',
+          title: `Community Post: ${post.title}`,
+          description: post.description || `${author?.name || 'A neighbor'} shared a community post.`,
+          link: `/community/${post.id}`,
+          created_at: post.created_at,
+          is_read: false,
+          author_name: author?.name,
+          author_photo_url: author?.profile_photo_url,
+        })
       }
 
-      // Map Replies
-      if (recentReplies) {
-        for (const reply of recentReplies) {
-          const profile = Array.isArray((reply as any).profiles)
-            ? (reply as any).profiles[0]
-            : (reply as any).profiles
-          const post = Array.isArray((reply as any).posts)
-            ? (reply as any).posts[0]
-            : (reply as any).posts
-
-          items.push({
-            id: `reply-${reply.id}`,
-            type: 'reply',
-            title: `${profile?.name || 'Someone'} replied on "${post?.title || 'Community Post'}"`,
-            description: reply.content,
-            link: `/community/${reply.post_id}`,
-            created_at: reply.created_at,
-            is_read: readIds.has(`reply-${reply.id}`),
-            author_name: profile?.name,
-            author_photo_url: profile?.profile_photo_url,
-          })
-        }
+      for (const business of otherBusinesses) {
+        const createdAt = businessDates.get(business.id)
+        if (!createdAt) continue
+        items.push({
+          id: `biz-${business.id}`,
+          type: 'business',
+          title: `New Nearby Business: ${business.name}`,
+          description: `A new ${business.category || 'local business'} was added nearby.`,
+          link: `/business/${business.id}`,
+          created_at: createdAt,
+          is_read: false,
+        })
       }
 
-      // Sort by newest
+      for (const post of businessPromos) {
+        if (!post.business_id) continue
+        const author = authorById.get(post.user_id)
+        const business = businessById.get(post.business_id)
+        if (!business) continue
+        items.push({
+          id: `post-${post.id}`,
+          type: 'business',
+          title: `Business Update: ${post.title}`,
+          description: post.description || `${author?.name || business.name} shared a business update.`,
+          link: `/business/${business.id}`,
+          created_at: post.created_at,
+          is_read: false,
+          author_name: author?.name,
+          author_photo_url: author?.profile_photo_url,
+        })
+      }
+
+      const initialized = localStorage.getItem('locallink_notifications_initialized') === 'true'
+      const readIds = getReadIds()
+      for (const item of items) item.is_read = !initialized || readIds.has(item.id)
+      if (!initialized) {
+        localStorage.setItem('locallink_notifications_initialized', 'true')
+        localStorage.setItem('locallink_read_notifications', JSON.stringify(items.map((item) => item.id)))
+      }
+
       items.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-
-      setNotifications(items)
-      const unread = items.filter((n) => !n.is_read).length
-      setUnreadCount(unread)
+      const recentItems = items.slice(0, 50)
+      seenNotificationIds.current = new Set(recentItems.map((item) => item.id))
+      setNotifications(recentItems)
+      setUnreadCount(recentItems.filter((item) => !item.is_read).length)
     } catch (err) {
       console.error('Failed to fetch notifications:', err)
     } finally {
       setLoading(false)
     }
+  }, [enabled, radiusKm, setUnreadCount, societyId, userId])
+
+  const addLiveNotification = useCallback((notification: AppNotification) => {
+    if (seenNotificationIds.current.has(notification.id)) return
+    seenNotificationIds.current.add(notification.id)
+
+    const isRead = getReadIds().has(notification.id)
+    setNotifications((previous) => [
+      { ...notification, is_read: isRead },
+      ...previous.filter((item) => item.id !== notification.id),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()))
+    if (!isRead) setUnreadCount((count) => count + 1)
   }, [setUnreadCount])
 
-  useEffect(() => {
-    fetchNotifications()
-  }, [fetchNotifications])
+  const refreshNotifications = useEffectEvent(() => fetchNotifications())
 
-  // Real-time listener for new posts, businesses, replies
   useEffect(() => {
+    const timer = window.setTimeout(() => void refreshNotifications(), 0)
+    return () => window.clearTimeout(timer)
+  }, [enabled, isOpen, radiusKm, societyId, userId])
+
+  useEffect(() => {
+    if (!enabled || !userId) return
+
     const supabase = createClient()
-
     const channel = supabase
-      .channel('realtime-notifications')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'posts' },
-        (payload) => {
-          const newPost = payload.new as any
-          const notifId = `post-${newPost.id}`
-          const notif: AppNotification = {
-            id: notifId,
-            type: newPost.type === 'individual' ? 'activity' : 'community',
-            title: newPost.type === 'individual'
-              ? `New Activity: ${newPost.title}`
-              : `New Query/Post: ${newPost.title}`,
-            description: newPost.description || 'A neighbor just posted an update.',
-            link: newPost.type === 'individual' ? `/activities/${newPost.id}` : `/community/${newPost.id}`,
-            created_at: newPost.created_at || new Date().toISOString(),
-            is_read: false,
-          }
-
-          setNotifications((prev) => [notif, ...prev])
-          setUnreadCount((c) => c + 1)
+      .channel('realtime-feed-notifications')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload) => {
+        const post = payload.new as {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          description: string | null
+          business_id: string | null
+          society_id: string | null
+          status: string
+          created_at: string
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'businesses' },
-        (payload) => {
-          const newBiz = payload.new as any
-          const notifId = `biz-${newBiz.id}`
-          const notif: AppNotification = {
-            id: notifId,
+        if (post.user_id === userId || post.status !== 'active') return
+
+        if (post.type === 'local' && societyId && post.society_id === societyId) {
+          addLiveNotification({
+            id: `post-${post.id}`,
+            type: 'community',
+            title: `Community Post: ${post.title}`,
+            description: post.description || 'A neighbor shared a community post.',
+            link: `/community/${post.id}`,
+            created_at: post.created_at || new Date().toISOString(),
+            is_read: false,
+          })
+          return
+        }
+
+        if (post.type === 'individual') {
+          const { data } = await supabase.rpc('nearby_posts', {
+            radius_km: radiusKm,
+            post_type: 'individual',
+          })
+          const nearbyPost = ((data ?? []) as NearbyActivity[]).find((item) => item.id === post.id)
+          if (!nearbyPost) return
+
+          addLiveNotification({
+            id: `post-${post.id}`,
+            type: 'nearby',
+            title: `New Nearby Activity: ${post.title}`,
+            description: post.description || `${nearbyPost.author_name || 'A neighbor'} posted a nearby activity.`,
+            link: `/activities/${post.id}`,
+            created_at: post.created_at || new Date().toISOString(),
+            is_read: false,
+            author_name: nearbyPost.author_name || undefined,
+            author_photo_url: nearbyPost.author_photo_url,
+          })
+          return
+        }
+
+        if (post.type === 'business' && post.business_id) {
+          const { data } = await supabase.rpc('nearby_businesses', {
+            radius_km: radiusKm,
+            filter_category: null,
+          })
+          const business = ((data ?? []) as NearbyBusiness[]).find((item) => item.id === post.business_id)
+          if (!business) return
+
+          addLiveNotification({
+            id: `post-${post.id}`,
             type: 'business',
-            title: `New Business: ${newBiz.name}`,
-            description: `Check out ${newBiz.name} (${newBiz.category || 'Local Shop'})!`,
-            link: `/business/${newBiz.id}`,
-            created_at: newBiz.created_at || new Date().toISOString(),
+            title: `Business Update: ${post.title}`,
+            description: post.description || `${business.name} shared a business update.`,
+            link: `/business/${business.id}`,
+            created_at: post.created_at || new Date().toISOString(),
             is_read: false,
-          }
-
-          setNotifications((prev) => [notif, ...prev])
-          setUnreadCount((c) => c + 1)
+          })
         }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'replies' },
-        (payload) => {
-          const newReply = payload.new as any
-          const notifId = `reply-${newReply.id}`
-          const notif: AppNotification = {
-            id: notifId,
-            type: 'reply',
-            title: 'New Reply on Community Thread',
-            description: newReply.content,
-            link: `/community/${newReply.post_id}`,
-            created_at: newReply.created_at || new Date().toISOString(),
-            is_read: false,
-          }
-
-          setNotifications((prev) => [notif, ...prev])
-          setUnreadCount((c) => c + 1)
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'businesses' }, async (payload) => {
+        const business = payload.new as {
+          id: string
+          owner_id: string
+          name: string
+          category: string | null
+          created_at: string
         }
-      )
+        if (business.owner_id === userId) return
+
+        const { data } = await supabase.rpc('nearby_businesses', {
+          radius_km: radiusKm,
+          filter_category: null,
+        })
+        if (!((data ?? []) as NearbyBusiness[]).some((item) => item.id === business.id)) return
+
+        addLiveNotification({
+          id: `biz-${business.id}`,
+          type: 'business',
+          title: `New Nearby Business: ${business.name}`,
+          description: `A new ${business.category || 'local business'} was added nearby.`,
+          link: `/business/${business.id}`,
+          created_at: business.created_at || new Date().toISOString(),
+          is_read: false,
+        })
+      })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [setUnreadCount])
+  }, [addLiveNotification, enabled, radiusKm, societyId, userId])
 
   const handleMarkAllAsRead = () => {
-    const allIds = notifications.map((n) => n.id)
-    localStorage.setItem('locallink_read_notifications', JSON.stringify(allIds))
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
+    const allIds = notifications.map((notification) => notification.id)
+    localStorage.setItem('locallink_read_notifications', JSON.stringify([...getReadIds(), ...allIds]))
+    setNotifications((previous) => previous.map((notification) => ({ ...notification, is_read: true })))
     setUnreadCount(0)
   }
 
   const handleNotificationClick = (notification: AppNotification) => {
-    const readIds = new Set<string>(
-      JSON.parse(localStorage.getItem('locallink_read_notifications') || '[]')
-    )
+    const readIds = getReadIds()
     readIds.add(notification.id)
     localStorage.setItem('locallink_read_notifications', JSON.stringify(Array.from(readIds)))
-
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notification.id ? { ...n, is_read: true } : n))
+    setNotifications((previous) =>
+      previous.map((item) => (item.id === notification.id ? { ...item, is_read: true } : item))
     )
-    setUnreadCount((prev) => Math.max(0, prev - (notification.is_read ? 0 : 1)))
-
+    setUnreadCount((previous) => Math.max(0, previous - (notification.is_read ? 0 : 1)))
     onClose()
     router.push(notification.link)
   }
 
   if (!isOpen) return null
 
-  const filteredNotifications = notifications.filter((n) => {
-    if (filter === 'all') return true
-    if (filter === 'activity') return n.type === 'activity' || n.type === 'interest'
-    if (filter === 'business') return n.type === 'business'
-    if (filter === 'community') return n.type === 'community' || n.type === 'reply'
-    return true
-  })
+  const filteredNotifications = notifications.filter((notification) =>
+    filter === 'all' || notification.type === filter
+  )
+  const iconByType: Record<AppNotification['type'], string> = {
+    nearby: 'directions_run',
+    business: 'storefront',
+    community: 'forum',
+  }
+  const iconBgByType: Record<AppNotification['type'], string> = {
+    nearby: 'bg-primary/20 text-primary',
+    business: 'bg-amber-500/20 text-amber-700',
+    community: 'bg-blue-500/20 text-blue-700',
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-surface-container-low w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-outline-variant/40 shadow-2xl p-5 sm:p-6 flex flex-col gap-4 max-h-[85vh] overflow-hidden">
-        
-        {/* Header */}
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-surface-container-lowest w-full max-w-lg rounded-t-3xl sm:rounded-2xl border border-outline-variant/30 shadow-2xl p-5 sm:p-6 flex flex-col gap-4 max-h-[85vh] overflow-hidden">
         <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-primary text-2xl icon-fill">notifications</span>
@@ -292,11 +424,7 @@ export default function NotificationDrawer({
           </div>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={handleMarkAllAsRead}
-                className="text-xs font-semibold text-primary hover:underline"
-              >
+              <button type="button" onClick={handleMarkAllAsRead} className="text-xs font-semibold text-primary hover:underline">
                 Mark read
               </button>
             )}
@@ -311,13 +439,13 @@ export default function NotificationDrawer({
           </div>
         </div>
 
-        {/* Filter Pills */}
         <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-          {(['all', 'activity', 'community', 'business'] as const).map((tab) => (
+          {(['all', 'nearby', 'business', 'community'] as const).map((tab) => (
             <button
               key={tab}
+              type="button"
               onClick={() => setFilter(tab)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium capitalize whitespace-nowrap active:scale-95 transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap capitalize active:scale-95 transition-all ${
                 filter === tab
                   ? 'bg-primary-container text-on-primary-container font-semibold shadow-sm'
                   : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
@@ -328,7 +456,6 @@ export default function NotificationDrawer({
           ))}
         </div>
 
-        {/* Notifications List */}
         <div className="flex-1 overflow-y-auto hide-scrollbar space-y-2 max-h-[50vh]">
           {loading ? (
             <div className="py-12 text-center">
@@ -341,73 +468,37 @@ export default function NotificationDrawer({
                 <span className="material-symbols-outlined text-3xl text-on-surface-variant/40">notifications_none</span>
               </div>
               <p className="font-semibold text-sm sm:text-base text-on-surface mb-1">No notifications yet</p>
-              <p className="text-xs text-on-surface-variant">When neighbors post activities, businesses, or queries, you&apos;ll see them here!</p>
+              <p className="text-xs text-on-surface-variant">Nearby activities, businesses, and community posts will appear here.</p>
             </div>
           ) : (
-            filteredNotifications.map((n) => {
-              const iconMap = {
-                activity: 'directions_run',
-                business: 'storefront',
-                community: 'forum',
-                reply: 'chat_bubble',
-                interest: 'favorite',
-                message: 'mail',
-              }
-
-              const iconBgMap = {
-                activity: 'bg-primary/20 text-primary',
-                business: 'bg-amber-500/20 text-amber-400',
-                community: 'bg-blue-500/20 text-blue-400',
-                reply: 'bg-emerald-500/20 text-emerald-400',
-                interest: 'bg-pink-500/20 text-pink-400',
-                message: 'bg-purple-500/20 text-purple-400',
-              }
-
-              return (
-                <button
-                  key={n.id}
-                  type="button"
-                  onClick={() => handleNotificationClick(n)}
-                  className={`w-full text-left p-3.5 rounded-2xl border transition-all active:scale-[0.99] flex items-start gap-3 group ${
-                    n.is_read
-                      ? 'bg-surface-container/50 border-outline-variant/20 hover:bg-surface-container'
-                      : 'bg-surface-container-high/60 border-primary/40 hover:bg-surface-container-high shadow-sm'
-                  }`}
-                >
-                  {/* Icon or Photo */}
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBgMap[n.type]}`}>
-                    <span className="material-symbols-outlined text-xl icon-fill">
-                      {iconMap[n.type]}
-                    </span>
+            filteredNotifications.map((notification) => (
+              <button
+                key={notification.id}
+                type="button"
+                onClick={() => handleNotificationClick(notification)}
+                className={`w-full text-left p-3.5 rounded-2xl border transition-all active:scale-[0.99] flex items-start gap-3 group ${
+                  notification.is_read
+                    ? 'bg-surface-container/50 border-outline-variant/20 hover:bg-surface-container'
+                    : 'bg-surface-container-high/60 border-primary/40 hover:bg-surface-container-high shadow-sm'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBgByType[notification.type]}`}>
+                  <span className="material-symbols-outlined text-xl icon-fill">{iconByType[notification.type]}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline justify-between gap-2 mb-0.5">
+                    <h4 className={`text-xs sm:text-sm truncate group-hover:text-primary transition-colors ${notification.is_read ? 'font-semibold text-on-surface' : 'font-bold text-on-surface'}`}>
+                      {notification.title}
+                    </h4>
+                    <span className="text-[10px] text-on-surface-variant/70 shrink-0">{getRelativeTime(notification.created_at)}</span>
                   </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between gap-2 mb-0.5">
-                      <h4 className={`text-xs sm:text-sm font-semibold truncate group-hover:text-primary transition-colors ${
-                        n.is_read ? 'text-on-surface' : 'text-on-surface font-bold'
-                      }`}>
-                        {n.title}
-                      </h4>
-                      <span className="text-[10px] text-on-surface-variant/70 shrink-0">
-                        {getRelativeTime(n.created_at)}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-                      {n.description}
-                    </p>
-                  </div>
-
-                  {!n.is_read && (
-                    <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5 animate-pulse"></span>
-                  )}
-                </button>
-              )
-            })
+                  <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">{notification.description}</p>
+                </div>
+                {!notification.is_read && <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5 animate-pulse" />}
+              </button>
+            ))
           )}
         </div>
-
       </div>
     </div>
   )

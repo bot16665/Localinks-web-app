@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
+import LocationPicker from '@/components/LocationPicker'
+import { searchLocalities, type LocationSelection } from '@/lib/location-geocoding'
 
 interface LocationModalProps {
   isOpen: boolean
   onClose: () => void
   currentLocationName: string
   userId?: string
-  onLocationUpdated: (newLocationName: string, lat: number, lng: number) => void
+  onLocationUpdated: (newLocationName: string, lat: number, lng: number, societyId?: string) => void
 }
 
 interface SocietyItem {
@@ -24,9 +26,10 @@ export default function LocationModal({
   userId,
   onLocationUpdated,
 }: LocationModalProps) {
-  const [detectingGps, setDetectingGps] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedLocation, setSelectedLocation] = useState<LocationSelection | null>(null)
+  const [selectedSocietyId, setSelectedSocietyId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [selectingSocietyId, setSelectingSocietyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [societies, setSocieties] = useState<SocietyItem[]>([])
   const [loadingSocieties, setLoadingSocieties] = useState(false)
@@ -55,113 +58,30 @@ export default function LocationModal({
 
   if (!isOpen) return null
 
-  // GPS Auto-detect location & Reverse Geocode
-  const handleDetectGps = () => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.')
-      return
-    }
-
-    setDetectingGps(true)
+  const handleLocationChange = (location: LocationSelection) => {
+    setSelectedLocation(location)
+    setSelectedSocietyId(null)
     setError(null)
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude
-        const lng = position.coords.longitude
-
-        try {
-          // Reverse geocode to get neighborhood / area name
-          let detectedName = 'Nearby Area'
-          try {
-            const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-            )
-            const json = await res.json()
-            if (json && json.address) {
-              detectedName =
-                json.address.suburb ||
-                json.address.neighbourhood ||
-                json.address.residential ||
-                json.address.village ||
-                json.address.town ||
-                json.address.city_district ||
-                json.address.city ||
-                'Current Location'
-            }
-          } catch {
-            detectedName = `Area (${lat.toFixed(2)}, ${lng.toFixed(2)})`
-          }
-
-          // Save to Supabase
-          await saveUserLocation(lat, lng, detectedName)
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to update location')
-          setDetectingGps(false)
-        }
-      },
-      (err) => {
-        setDetectingGps(false)
-        if (err.code === err.PERMISSION_DENIED) {
-          setError('Location permission denied. Please allow location access in your browser.')
-        } else {
-          setError('Unable to detect your location. Please try entering your neighborhood name.')
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
   }
 
-  // Select an existing society
   const handleSelectSociety = async (society: SocietyItem) => {
-    setSaving(true)
+    setSelectingSocietyId(society.id)
     setError(null)
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      const currentUid = userId || user?.id
-      if (!currentUid) throw new Error('Not authenticated')
-
-      // Get society location point if available
-      const { data: societyData } = await supabase
-        .from('societies')
-        .select('location')
-        .eq('id', society.id)
-        .single()
-
-      const updates: any = {
-        society_id: society.id,
-      }
-
-      if (societyData?.location) {
-        updates.location = societyData.location
-      }
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', currentUid)
-
-      if (updateError) throw updateError
-
-      onLocationUpdated(society.name, 0, 0)
-      onClose()
+      const query = [society.name, society.address].filter(Boolean).join(', ')
+      const locations = await searchLocalities(query)
+      if (locations.length === 0) throw new Error('Could not find map coordinates for this area.')
+      setSelectedLocation({ ...locations[0], locality: society.name })
+      setSelectedSocietyId(society.id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to select location')
     } finally {
-      setSaving(false)
+      setSelectingSocietyId(null)
     }
   }
 
-  // Save custom entered neighborhood / society
-  const handleSaveCustomLocation = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const name = searchQuery.trim()
-    if (!name) return
-
+  const handleSaveLocation = async () => {
+    if (!selectedLocation?.locality || saving) return
     setSaving(true)
     setError(null)
 
@@ -174,20 +94,27 @@ export default function LocationModal({
       const currentUid = userId || user?.id
       if (!currentUid) throw new Error('Not authenticated')
 
-      // Check if society exists
-      const { data: existingSociety } = await supabase
-        .from('societies')
-        .select('id, name')
-        .ilike('name', name)
-        .maybeSingle()
-
-      let societyId = existingSociety?.id
+      const point = `SRID=4326;POINT(${selectedLocation.longitude} ${selectedLocation.latitude})`
+      let societyId = selectedSocietyId
 
       if (!societyId) {
-        // Create new society
+        const { data: existingSociety, error: lookupError } = await supabase
+          .from('societies')
+          .select('id')
+          .ilike('name', selectedLocation.locality)
+          .maybeSingle()
+        if (lookupError) throw lookupError
+        societyId = existingSociety?.id || null
+      }
+
+      if (!societyId) {
         const { data: newSociety, error: insertError } = await supabase
           .from('societies')
-          .insert({ name })
+          .insert({
+            name: selectedLocation.locality,
+            address: selectedLocation.displayName,
+            location: point,
+          })
           .select('id')
           .single()
 
@@ -195,15 +122,20 @@ export default function LocationModal({
         societyId = newSociety.id
       }
 
-      // Update user profile
-      const { error: profileError } = await supabase
+      if (!societyId) throw new Error('Could not resolve this society.')
+
+      const { error: societyError } = await supabase.rpc('set_my_society', {
+        target_society_id: societyId,
+      })
+      if (societyError) throw societyError
+
+      const { error: locationError } = await supabase
         .from('profiles')
-        .update({ society_id: societyId })
+        .update({ current_location: point })
         .eq('id', currentUid)
+      if (locationError) throw locationError
 
-      if (profileError) throw profileError
-
-      onLocationUpdated(name, 0, 0)
+      onLocationUpdated(selectedLocation.locality, selectedLocation.latitude, selectedLocation.longitude, societyId)
       onClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to set location')
@@ -212,65 +144,11 @@ export default function LocationModal({
     }
   }
 
-  const saveUserLocation = async (lat: number, lng: number, name: string) => {
-    const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    const currentUid = userId || user?.id
-    if (!currentUid) throw new Error('Not authenticated')
-
-    const point = `SRID=4326;POINT(${lng} ${lat})`
-
-    // Check or create society for this area
-    const { data: existingSociety } = await supabase
-      .from('societies')
-      .select('id')
-      .ilike('name', name)
-      .maybeSingle()
-
-    let societyId = existingSociety?.id
-
-    if (!societyId) {
-      const { data: newSociety } = await supabase
-        .from('societies')
-        .insert({
-          name,
-          location: point,
-        })
-        .select('id')
-        .single()
-
-      societyId = newSociety?.id
-    }
-
-    const updates: any = {
-      location: point,
-    }
-    if (societyId) {
-      updates.society_id = societyId
-    }
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', currentUid)
-
-    if (updateError) throw updateError
-
-    setDetectingGps(false)
-    onLocationUpdated(name, lat, lng)
-    onClose()
-  }
-
-  const filteredSocieties = societies.filter((s) =>
-    s.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredSocieties = societies
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="bg-surface-container-low w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-outline-variant/40 shadow-2xl p-5 sm:p-6 flex flex-col gap-4 max-h-[85vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
+      <div className="bg-surface-container-lowest w-full max-w-lg rounded-t-3xl sm:rounded-2xl border border-outline-variant/30 shadow-2xl p-5 sm:p-6 flex flex-col gap-4 max-h-[92vh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-outline-variant/20">
@@ -300,62 +178,7 @@ export default function LocationModal({
           <span className="text-xs bg-primary text-on-primary px-2.5 py-1 rounded-full font-semibold">Active</span>
         </div>
 
-        {/* GPS Auto-detection Button */}
-        <button
-          type="button"
-          onClick={handleDetectGps}
-          disabled={detectingGps || saving}
-          className="w-full bg-surface-container hover:bg-surface-container-high border border-primary/40 rounded-2xl p-3.5 flex items-center gap-3.5 transition-all text-left group active:scale-[0.98] disabled:opacity-50 touch-target"
-        >
-          <div className="w-11 h-11 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-md">
-            {detectingGps ? (
-              <span className="material-symbols-outlined text-xl animate-spin">progress_activity</span>
-            ) : (
-              <span className="material-symbols-outlined text-2xl icon-fill group-hover:scale-110 transition-transform">my_location</span>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="font-semibold text-sm sm:text-base text-on-surface block leading-tight">
-              {detectingGps ? 'Detecting GPS location...' : 'Use Current GPS Location'}
-            </span>
-            <span className="text-xs text-on-surface-variant mt-0.5 block">
-              {detectingGps ? 'Finding your neighborhood...' : 'Automatically detects your precise area'}
-            </span>
-          </div>
-          <span className="material-symbols-outlined text-primary text-xl shrink-0 group-hover:translate-x-1 transition-transform">
-            chevron_right
-          </span>
-        </button>
-
-        {/* Search / Enter Custom Location */}
-        <form onSubmit={handleSaveCustomLocation} className="space-y-2">
-          <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-            Or Search / Enter Neighborhood or Society
-          </label>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 relative">
-              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg pointer-events-none">
-                search
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="e.g., Greenwood Estates, Indiranagar..."
-                className="w-full bg-surface-container border border-outline-variant/40 rounded-2xl pl-10 pr-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-              />
-            </div>
-            {searchQuery.trim() && (
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-4 py-2.5 bg-primary text-on-primary rounded-2xl font-semibold text-xs sm:text-sm hover:brightness-110 active:scale-95 transition-all shadow-md shrink-0 touch-target"
-              >
-                {saving ? 'Setting...' : 'Set'}
-              </button>
-            )}
-          </div>
-        </form>
+        <LocationPicker value={selectedLocation} onChange={handleLocationChange} disabled={saving} />
 
         {error && (
           <div className="bg-error-container/20 border border-error/30 rounded-xl p-3 text-center">
@@ -364,7 +187,7 @@ export default function LocationModal({
         )}
 
         {/* Societies List */}
-        <div className="flex-1 overflow-y-auto hide-scrollbar space-y-1.5 max-h-48 pt-1">
+        <div className="space-y-1.5 pt-1">
           <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider block mb-1">
             Available Societies & Areas
           </span>
@@ -380,7 +203,7 @@ export default function LocationModal({
                 key={society.id}
                 type="button"
                 onClick={() => handleSelectSociety(society)}
-                disabled={saving}
+                disabled={saving || selectingSocietyId !== null}
                 className="w-full bg-surface-container/60 hover:bg-surface-container border border-outline-variant/20 rounded-xl p-3 flex items-center justify-between text-left transition-all active:scale-[0.99] group"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -394,25 +217,22 @@ export default function LocationModal({
                     )}
                   </div>
                 </div>
-                <span className="text-xs text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  Select
+                <span className="text-xs text-primary font-medium">
+                  {selectingSocietyId === society.id ? 'Finding...' : selectedSocietyId === society.id ? 'Selected' : 'Select'}
                 </span>
               </button>
             ))
-          ) : (
-            searchQuery.trim() && (
-              <button
-                type="button"
-                onClick={handleSaveCustomLocation}
-                className="w-full bg-primary/10 border border-primary/30 rounded-xl p-3 text-center hover:bg-primary/20 transition-colors"
-              >
-                <span className="text-xs font-semibold text-primary">
-                  Set &ldquo;{searchQuery.trim()}&rdquo; as your location
-                </span>
-              </button>
-            )
-          )}
+          ) : <p className="py-3 text-center text-xs text-on-surface-variant">No saved areas available.</p>}
         </div>
+
+        <button
+          type="button"
+          onClick={handleSaveLocation}
+          disabled={saving || !selectedLocation?.locality}
+          className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-on-primary shadow-md transition-all hover:brightness-110 disabled:opacity-50"
+        >
+          {saving ? 'Saving location...' : 'Save selected location'}
+        </button>
 
       </div>
     </div>
